@@ -1,0 +1,9 @@
+[package]
+name = "tests"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+envoke = { path = "../envoke" }
+strum = { version = "0.27.1", features = ["derive"] }
+temp-env = "0.3.6"

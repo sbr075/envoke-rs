@@ -1,0 +1,12 @@
+[package]
+name = "envoke"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+envoke_derive = { path = "../envoke_derive" }
+strum = { version = "0.27.1", features = ["derive"] }
+thiserror = "2.0.11"
+
+[dev-dependencies]
+temp-env = "0.3.6"
