@@ -43,16 +43,16 @@ If there are any more attributes you think would be useful open an issue and I w
 </br>
 
 ### Name cases
-| Case                 | Value                  | Example                             | Description                                                                                                        |
-| -------------------- | ---------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Lower case           | `lowercase`            | some_field_name` → `somefieldname   | Converts all characters to lowercase and removes binding characters                                                |
-| Upper case           | `UPPERCASE`            | some_field_name` → `SOMEFIELDNAME   | Converts all characters to uppercase and removes binding characters                                                |
-| Pascal case          | `PascalCase`           | some_field_name` → `SomeFieldName   | Capitalizes the first letter of each word and removes binding                                                      |
-| Camel case           | `camelCase`            | some_field_name` → `someFieldName   | Lowercases the first letter but capitalizes the first letter of subsequent words while removing binding characters |
-| Snake case           | `snake_case`           | someFieldName` → `some_field_name   | Converts names to lowercase and uses underscores `_` to separate words                                             |
-| Screaming snake case | `SCREAMING_SNAKE_CASE` | some_field_name` → `SOME_FIELD_NAME | Converts names to uppercase and uses underscores `_` to separate words                                             |
-| Kebab case           | `kebab-case`           | some_field_name` → `some-field-name | Converts names to lowercase and uses hyphens `-` to separate words                                                 |
-| Screaming kebab case | `SCREAMING-KEBAB-CASE` | some_field_name` → `SOME-FIELD-NAME | Converts names to uppercase and uses hyphens `-` to separate words                                                 |
+| Case                 | Value                  | Example                           | Description                                                                                                        |
+| -------------------- | ---------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Lower case           | `lowercase` or `lower` | some_field_name → somefieldname   | Converts all characters to lowercase and removes binding characters                                                |
+| Upper case           | `UPPERCASE` or `UPPER` | some_field_name → SOMEFIELDNAME   | Converts all characters to uppercase and removes binding characters                                                |
+| Pascal case          | `PascalCase`           | some_field_name → SomeFieldName   | Capitalizes the first letter of each word and removes binding                                                      |
+| Camel case           | `camelCase`            | some_field_name → someFieldName   | Lowercases the first letter but capitalizes the first letter of subsequent words while removing binding characters |
+| Snake case           | `snake_case`           | someFieldName → some_field_name   | Converts names to lowercase and uses underscores `_` to separate words                                             |
+| Screaming snake case | `SCREAMING_SNAKE_CASE` | some_field_name → SOME_FIELD_NAME | Converts names to uppercase and uses underscores `_` to separate words                                             |
+| Kebab case           | `kebab-case`           | some_field_name → some-field-name | Converts names to lowercase and uses hyphens `-` to separate words                                                 |
+| Screaming kebab case | `SCREAMING-KEBAB-CASE` | some_field_name → SOME-FIELD-NAME | Converts names to uppercase and uses hyphens `-` to separate words                                                 |
 
 </br>
 

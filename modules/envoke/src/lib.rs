@@ -25,11 +25,22 @@ pub trait Envoke: Sized {
     ///
     /// #[derive(Envoke)]
     /// struct Config {
-    ///     #[fill(env = "TEST_ENV")]
-    ///     key: String,
+    ///     #[fill(env = "TEST_ENV1")]
+    ///     field1: String,
+    ///
+    ///     #[fill(env)]
+    ///     field2: String,
     /// }
     ///
     /// let config = Config::envoke(); // Panics if `key` is missing
+    ///
+    /// // Can also be used to fill out the rest. Note that it still requires
+    /// // the values to be filled in but they will be overwritten by your
+    /// // initially set values
+    /// let config = Config {
+    ///     field1: "value".to_string(),
+    ///     ..Envoke::envoke()
+    /// }
     /// ```
     fn envoke() -> Self {
         Envoke::try_envoke().unwrap()
@@ -53,7 +64,7 @@ pub trait Envoke: Sized {
     /// #[derive(Envoke)]
     /// struct Config {
     ///     #[fill(env = "TEST_ENV")]
-    ///     key: String,
+    ///     field1: String,
     /// }
     ///
     /// match Config::try_envoke() {
