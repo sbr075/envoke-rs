@@ -7,13 +7,12 @@ use std::{
     str::FromStr,
 };
 
-use crate::errors::{Error, ParseError, Result, RetrieveError};
+use crate::errors::{ParseError, Result, RetrieveError};
 
 fn load_once<T: FromStr, K: AsRef<str>>(keys: &[K]) -> Result<T> {
     for key in keys {
         let key = key.as_ref().trim();
 
-        dbg!(key);
         let value = match env::var(key) {
             Ok(value) => value,
             Err(e) => match e {
@@ -41,13 +40,11 @@ fn load_once<T: FromStr, K: AsRef<str>>(keys: &[K]) -> Result<T> {
     })?
 }
 
-/// Parse key-value pairs in the form of "key=value,key=value" where "," and "="
-/// is the delim.
-fn parse_map<K, V, C>(pairs: &str, delim: &str) -> std::result::Result<C, ParseError>
+fn parse_map<K, V, M>(pairs: &str, delim: &str) -> std::result::Result<M, ParseError>
 where
     K: FromStr,
     V: FromStr,
-    C: FromIterator<(K, V)>,
+    M: FromIterator<(K, V)>,
 {
     pairs
         .trim()
@@ -77,24 +74,22 @@ where
         .collect()
 }
 
-/// Parse sequence of values in the form of "value1,value2,value3" where "," is
-/// the delim
-fn parse_set<T, C>(sequence: &str, delim: &str) -> std::result::Result<C, ParseError>
+fn parse_set<T, S>(sequence: &str, delim: &str) -> std::result::Result<S, ParseError>
 where
     T: FromStr,
-    C: FromIterator<T>,
+    S: FromIterator<T>,
 {
     sequence
         .trim()
         .split(delim)
         .map(|part| {
-            let value = part.trim();
-            if value.is_empty() {
+            let val = part.trim();
+            if val.is_empty() {
                 return Err(ParseError::MissingValue);
             }
 
-            value.parse().map_err(|_| ParseError::UnexpectedValueType {
-                value: value.to_string(),
+            val.parse().map_err(|_| ParseError::UnexpectedValueType {
+                value: val.to_string(),
             })
         })
         .collect()
@@ -109,24 +104,12 @@ where
     K: FromStr + Hash + Eq,
     V: FromStr,
 {
-    pub fn load_once<E>(keys: &[E], delim: &str, use_default: bool) -> Result<HashMap<K, V>>
+    pub fn load_once<E>(keys: &[E], delim: &str) -> Result<HashMap<K, V>>
     where
         E: AsRef<str>,
     {
-        let value: String = match load_once(keys) {
-            Ok(value) => value,
-            Err(e) => {
-                return match use_default {
-                    true => Ok(HashMap::new()),
-                    false => Err(e),
-                }
-            }
-        };
-
-        parse_map(&value, delim).or_else(|error| match use_default {
-            true => Ok(HashMap::new()),
-            false => Err(error)?,
-        })
+        let value: String = load_once(keys)?;
+        parse_map(&value, delim).map_err(|e| e.into())
     }
 }
 
@@ -135,24 +118,12 @@ where
     K: FromStr + Ord,
     V: FromStr,
 {
-    pub fn load_once<E>(keys: &[E], delim: &str, use_default: bool) -> Result<BTreeMap<K, V>>
+    pub fn load_once<E>(keys: &[E], delim: &str) -> Result<BTreeMap<K, V>>
     where
         E: AsRef<str>,
     {
-        let value: String = match load_once(keys) {
-            Ok(value) => value,
-            Err(e) => {
-                return match use_default {
-                    true => Ok(BTreeMap::new()),
-                    false => Err(e),
-                }
-            }
-        };
-
-        parse_map(&value, delim).or_else(|error| match use_default {
-            true => Ok(BTreeMap::new()),
-            false => Err(error)?,
-        })
+        let value: String = load_once(keys)?;
+        parse_map(&value, delim).map_err(|e| e.into())
     }
 }
 
@@ -160,24 +131,12 @@ impl<T> Envloader<HashSet<T>>
 where
     T: FromStr + Hash + Eq,
 {
-    pub fn load_once<E>(keys: &[E], delim: &str, use_default: bool) -> Result<HashSet<T>>
+    pub fn load_once<E>(keys: &[E], delim: &str) -> Result<HashSet<T>>
     where
         E: AsRef<str>,
     {
-        let value: String = match load_once(keys) {
-            Ok(value) => value,
-            Err(e) => {
-                return match use_default {
-                    true => Ok(HashSet::new()),
-                    false => Err(e),
-                }
-            }
-        };
-
-        parse_set(&value, delim).or_else(|error| match use_default {
-            true => Ok(HashSet::new()),
-            false => Err(error)?,
-        })
+        let value: String = load_once(keys)?;
+        parse_set(&value, delim).map_err(|e| e.into())
     }
 }
 
@@ -185,24 +144,12 @@ impl<T> Envloader<BTreeSet<T>>
 where
     T: FromStr + Ord,
 {
-    pub fn load_once<E>(keys: &[E], delim: &str, use_default: bool) -> Result<BTreeSet<T>>
+    pub fn load_once<E>(keys: &[E], delim: &str) -> Result<BTreeSet<T>>
     where
         E: AsRef<str>,
     {
-        let value: String = match load_once(keys) {
-            Ok(value) => value,
-            Err(e) => {
-                return match use_default {
-                    true => Ok(BTreeSet::new()),
-                    false => Err(e),
-                }
-            }
-        };
-
-        parse_set(&value, delim).or_else(|error| match use_default {
-            true => Ok(BTreeSet::new()),
-            false => Err(error)?,
-        })
+        let value: String = load_once(keys)?;
+        parse_set(&value, delim).map_err(|e| e.into())
     }
 }
 
@@ -210,24 +157,12 @@ impl<T> Envloader<Vec<T>>
 where
     T: FromStr,
 {
-    pub fn load_once<E>(keys: &[E], delim: &str, use_default: bool) -> Result<Vec<T>>
+    pub fn load_once<E>(keys: &[E], delim: &str) -> Result<Vec<T>>
     where
         E: AsRef<str>,
     {
-        let value: String = match load_once(keys) {
-            Ok(value) => value,
-            Err(e) => {
-                return match use_default {
-                    true => Ok(Vec::new()),
-                    false => Err(e),
-                }
-            }
-        };
-
-        parse_set(&value, delim).or_else(|error| match use_default {
-            true => Ok(Vec::new()),
-            false => Err(error)?,
-        })
+        let value: String = load_once(keys)?;
+        parse_set(&value, delim).map_err(|e| e.into())
     }
 }
 
@@ -241,13 +176,7 @@ where
     where
         K: AsRef<str> + Debug,
     {
-        match load_once(keys).map(Some) {
-            Ok(value) => Ok(value),
-            Err(e) => match e {
-                Error::RetrieveError(_) => Ok(None),
-                _ => Err(e),
-            },
-        }
+        load_once(keys).map(Some)
     }
 }
 
@@ -291,7 +220,7 @@ mod test {
                 let key_2 = Envloader::<Option<String>>::load_once(&["KEY_2"]);
                 let key_3 = Envloader::<Option<String>>::load_once(&["KEY_3"]);
                 let key_4 = Envloader::<Option<String>>::load_once(&["KEY_3", "KEY_4"]);
-                let key_5 = Envloader::<Vec<String>>::load_once(&["KEY_5"], ",", true);
+                let key_5 = Envloader::<Vec<String>>::load_once(&["KEY_5"], ",");
 
                 println!("{key_1:?}");
                 println!("{key_2:?}");

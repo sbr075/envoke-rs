@@ -1,6 +1,8 @@
 use std::str::FromStr;
 
 use convert_case::Case as ConvertCase;
+use quote::quote;
+use syn::parse::Parse;
 
 #[derive(Debug, strum::EnumString)]
 pub enum Case {
@@ -181,6 +183,41 @@ impl ContainerAttributes {
     }
 }
 
+#[derive(Debug)]
+pub enum DefaultValue {
+    Type(syn::Type),
+    Lit(syn::ExprLit),
+    Path(syn::ExprPath),
+    Call {
+        path: syn::ExprPath,
+        args: Vec<syn::Expr>,
+    },
+}
+
+impl Parse for DefaultValue {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        let expr: syn::Expr = input.parse()?;
+        match expr {
+            syn::Expr::Lit(lit) => Ok(DefaultValue::Lit(lit)),
+            syn::Expr::Path(path) => Ok(DefaultValue::Path(path)),
+            syn::Expr::Call(call) => {
+                if let syn::Expr::Path(path) = *call.func {
+                    Ok(DefaultValue::Call {
+                        path,
+                        args: call.args.into_iter().collect(),
+                    })
+                } else {
+                    Err(syn::Error::new_spanned(call, "Expected a function path"))
+                }
+            }
+            _ => Err(syn::Error::new_spanned(
+                expr,
+                "Unexpected default value format",
+            )),
+        }
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct FieldAttributes {
     /// Environment variables to load the field value from.
@@ -197,25 +234,8 @@ pub struct FieldAttributes {
     /// This function can be used without specifying `envs` to provide a static
     /// fallback.
     ///
-    /// **Default:** `false`
-    pub default: bool,
-
-    /// A default value to use if no environment variable is set.
-    ///
-    /// This function can be used without specifying `envs` to provide a static
-    /// fallback.
-    ///
     /// **Default:** `None`
-    pub default_t: Option<syn::Lit>,
-
-    /// A function to generate a default value if no environment variable is
-    /// set.
-    ///
-    /// This function can be used without specifying `envs` to provide a static
-    /// fallback.
-    ///
-    /// **Default:** `None`
-    pub default_fn: Option<syn::Path>,
+    pub default: Option<DefaultValue>,
 
     /// A function to parse the loaded value with before applying to the field
     ///
@@ -260,17 +280,8 @@ impl FieldAttributes {
         self.envs.get_or_insert_with(Vec::new).push(env);
     }
 
-    pub fn is_empty(&self) -> bool {
-        self.envs.is_none()
-            && self.default_t.is_none()
-            && self.default_fn.is_none()
-            && !self.nested
-            && !self.default
-    }
-
-    pub fn parse_attrs(field_name: &str, attrs: &Vec<syn::Attribute>) -> syn::Result<Self> {
+    pub fn parse_attrs(field: &syn::Field, attrs: &Vec<syn::Attribute>) -> syn::Result<Self> {
         let mut fa = FieldAttributes::default();
-
         for attr in attrs {
             if !attr.path().is_ident("fill") {
                 continue;
@@ -291,56 +302,34 @@ impl FieldAttributes {
 
                             fa.add_env(env);
                         }
-                        false => fa.add_env(field_name.to_owned()),
+                        false => {
+                            let ident = &field.ident;
+                            let name = quote! { #ident }.to_string();
+                            fa.add_env(name.to_owned())
+                        }
                     }
 
                     return Ok(());
                 }
 
+                // Allows the user to specify both
+                // 1. `#[fill(default)]` - Uses the field types default value
+                // 2. `#[fill(default = default_t)]` - Uses `default_t` as the field value
+                // 3. `#[fill(default = default_fn)]` - Uses `default_fn` return value as the
+                //    field value
                 if meta.path.is_ident("default") {
-                    if fa.default_fn.is_some() || fa.default_t.is_some() {
-                        return Err(
-                            meta.error("cannot use multiple default attributes at the same time")
-                        );
-                    }
-
-                    if fa.default {
+                    if fa.default.is_some() {
                         return Err(meta.error("field attribute `default` already set"));
                     }
 
-                    fa.default = true;
-                    return Ok(());
-                }
+                    fa.default = match meta.input.peek(syn::Token![=]) {
+                        true => Some(meta.value()?.parse()?),
+                        false => {
+                            let ty = &field.ty;
+                            Some(DefaultValue::Type(ty.clone()))
+                        }
+                    };
 
-                if meta.path.is_ident("default_t") {
-                    if fa.default_fn.is_some() || fa.default {
-                        return Err(
-                            meta.error("cannot use multiple default attributes at the same time")
-                        );
-                    }
-
-                    if fa.default_t.is_some() {
-                        return Err(meta.error("field attribute `default_t` already set"));
-                    }
-
-                    let default_t: syn::Lit = meta.value()?.parse()?;
-                    fa.default_t = Some(default_t);
-                    return Ok(());
-                }
-
-                if meta.path.is_ident("default_fn") {
-                    if fa.default_t.is_some() || fa.default {
-                        return Err(
-                            meta.error("cannot use multiple default attributes at the same time")
-                        );
-                    }
-
-                    if fa.default_fn.is_some() {
-                        return Err(meta.error("field attribute `default_fn` already set"));
-                    }
-
-                    let default_fn: syn::Path = meta.value()?.parse()?;
-                    fa.default_fn = Some(default_fn);
                     return Ok(());
                 }
 
@@ -349,7 +338,7 @@ impl FieldAttributes {
                         return Err(meta.error("field attribute `parse_fn` already set"));
                     }
 
-                    let parse_fn: syn::Path = meta.value()?.parse()?;
+                    let parse_fn = meta.value()?.parse()?;
                     fa.parse_fn = Some(parse_fn);
                     return Ok(());
                 }
@@ -359,7 +348,7 @@ impl FieldAttributes {
                         return Err(meta.error("field attribute `arg_type` already set"));
                     }
 
-                    let arg_type: syn::Type = meta.value()?.parse()?;
+                    let arg_type = meta.value()?.parse()?;
                     fa.arg_type = Some(arg_type);
                     return Ok(());
                 }
