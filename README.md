@@ -82,18 +82,16 @@ This will cause the macro to attempt to fill the field `field` with the value fr
 Field attributes allows you to configure how each field is individually handled when it comes to setting the fields value.
 
 ### Options
-| Attribute    | Default   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| ------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `env`        | None      | Environment variable name to load the field value from. Can be chained multiple times to allow for fallbacks. The macro follows a first come, first serve basis meaning it attempts to load the variables in the order they are listed. Once an value is found it will try to parse it into the specified type. If it fails it will return an error and wont try the remaining ones in the list. This behavior might change in the future. Optionally, you can supply your own parsing function. See `parse_fn` for more information! |
-| `default`    | False     | Use the default value if the environment variable is not found. Optionally to statically assign a value to the field `env` can be omitted. Can not be combined with `default_t` or `default_fn`                                                                                                                                                                                                                                                                                                                                       |
-| `default_t`  | None      | Set a default value for the field if the environment variable is not found. Optionally to statically assign a value to the field `env` can be omitted. Can not be combined with `default` or `default_fn`                                                                                                                                                                                                                                                                                                                             |
-| `default_fn` | None      | Set a default function to call to set the fields value if the environment variable is not found. Optionally to statically assign a value to the field `env` can be omitted. Cannot be combined with `default` or `default_t`                                                                                                                                                                                                                                                                                                          |
-| `parse_fn`   | None      | Set a custom parsing function for parsing the retrieved value before assigning it to the field. This can be useful when the fields type does not implement the `FromStr` trait. Requires `arg_type` to be set                                                                                                                                                                                                                                                                                                                        |
-| `arg_type`   | None      | Specify the argument type which the `parse_fn` function requires. As I don't know if it is possible to find the type automatically this argument is required such that the environment variable value can be parsed into the expected type first before being set as the argument in the function call.                                                                                                                                                                                                                               |
-| `delimiter`  | Comma (,) | Used when parsing environment variable which is a stringified map or set. The delimiter specifies the boundary between values.                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `no_prefix`  | False     | Disable adding the global prefix to this environment variable. This will also remove the delimiter that wouldn't normally be between the environment variable and prefix                                                                                                                                                                                                                                                                                                                                                             |
-| `no_suffix`  | False     | Disable adding the global suffix to this environment variable. This will also remove the delimiter that wouldn't normally be between the environment variable and suffix                                                                                                                                                                                                                                                                                                                                                             |
-| `nested`     | False     | Indicate that the field is a struct. Required when the field type is another struct                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Attribute   | Default   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ----------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `env`       | None      | Environment variable name to load the field value from. Can be chained multiple times to allow for fallbacks. The macro follows a first come, first serve basis meaning it attempts to load the variables in the order they are listed. Once an value is found it will try to parse it into the specified type. If it fails it will return an error and wont try the remaining ones in the list. This behavior might change in the future. Optionally, you can supply your own parsing function. See `parse_fn` for more information! |
+| `default`   | None      | Use the default value if the environment variable is not found. Optionally to statically assign a value to the field `env` can be omitted.                                                                                                                                                                                                                                                                                                                                                                                            |
+| `parse_fn`  | None      | Set a custom parsing function for parsing the retrieved value before assigning it to the field. This can be useful when the fields type does not implement the `FromStr` trait. Requires `arg_type` to be set                                                                                                                                                                                                                                                                                                                         |
+| `arg_type`  | None      | Specify the argument type which the `parse_fn` function requires. As I don't know if it is possible to find the type automatically this argument is required such that the environment variable value can be parsed into the expected type first before being set as the argument in the function call.                                                                                                                                                                                                                               |
+| `delimiter` | Comma (,) | Used when parsing environment variable which is a stringified map or set. The delimiter specifies the boundary between values.                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `no_prefix` | False     | Disable adding the global prefix to this environment variable. This will also remove the delimiter that wouldn't normally be between the environment variable and prefix                                                                                                                                                                                                                                                                                                                                                              |
+| `no_suffix` | False     | Disable adding the global suffix to this environment variable. This will also remove the delimiter that wouldn't normally be between the environment variable and suffix                                                                                                                                                                                                                                                                                                                                                              |
+| `nested`    | False     | Indicate that the field is a struct. Required when the field type is another struct                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 </br>
 
@@ -196,7 +194,7 @@ use envoke::{Envoke, Fill};
 
 #[derive(Fill)]
 struct Example {
-    #[fill(default_t = 10)]
+    #[fill(default = 10)]
     field1: i32,
 }
 
@@ -217,16 +215,23 @@ use envoke::{Envoke, Fill};
 
 #[derive(Fill)]
 struct Example {
-    #[fill(default_fn = default_duration)]
+    #[fill(default = default_duration())]
     field1: Duration,
+
+    #[fill(default = default_duration_with_arg(5))]
+    field2: DateTime<Utc>,
 }
 
 fn default_duration() -> Duration {
     Duration::from_secs(10)
 }
 
+fn default_duration_with_arg(add: u64) -> Duration {
+    Duration::from_secs(10 + add)
+}
+
 fn main() {
-    // Fills the struct field with Duration 10s
+    // Fills the struct field with Duration 10s and Duration 15s
     let _ = Example::envoke();
 }
 ```
@@ -271,7 +276,7 @@ use envoke::{Envoke, Fill};
 #[derive(Fill)]
 
 struct Inner {
-    #[fill(env = "ENV_BOOL", default_t = false)]
+    #[fill(env = "ENV_BOOL", default = false)]
     field1: bool,
 }
 
