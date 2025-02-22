@@ -3,7 +3,7 @@ use proc_macro::TokenStream;
 use proc_macro2::Ident;
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput, Type};
-use utils::{get_fields, load_default, load_env};
+use utils::{default_call, env_call, get_fields};
 
 mod attr;
 mod utils;
@@ -19,13 +19,11 @@ impl TryFrom<syn::Field> for Field {
     type Error = syn::Error;
 
     fn try_from(field: syn::Field) -> Result<Self, Self::Error> {
-        let ident = field.ident;
-
-        let name = quote! { #ident }.to_string();
-        let attrs = FieldAttributes::parse_attrs(&name, &field.attrs)?;
+        let ident = &field.ident;
+        let attrs = FieldAttributes::parse_attrs(&field, &field.attrs)?;
 
         Ok(Self {
-            ident,
+            ident: ident.clone(),
             ty: field.ty,
             attrs,
         })
@@ -55,26 +53,26 @@ pub fn derive(input: TokenStream) -> TokenStream {
 
         let ident = &field.ident;
         let ty = &field.ty;
-        if field.attrs.is_empty() {
-            let field_name = quote! { #ident }.to_string();
-            panic!(
-                "atleast one of the following field attributes is required for `{field_name}`: \
-                 `env`, `default_t`, `default_t`, `default_fn`, or `nested`"
-            )
-        }
 
-        let tokens = if field.attrs.nested {
+        let value_call = if field.attrs.nested {
             quote! {
-                #ident: <#ty as envoke::Envoke>::try_envoke()?
+                <#ty as envoke::Envoke>::try_envoke()?
             }
+        } else if field.attrs.envs.is_some() {
+            env_call(&attrs, &field)
+        } else if field.attrs.default.is_some() {
+            default_call(&field)
         } else {
-            match &field.attrs.envs.is_some() {
-                true => load_env(&attrs, &field),
-                false => load_default(&field),
+            quote! {
+                panic!("field required attributes")
             }
         };
 
-        field_assignments.push(tokens);
+        let call = quote! {
+            #ident: #value_call
+        };
+
+        field_assignments.push(call);
     }
 
     let expanded = quote! {

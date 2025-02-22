@@ -28,8 +28,8 @@ pub enum RetrieveError {
     #[error("environment variable `{key}` contains invalid Unicode")]
     InvalidUnicode { key: String },
 
-    #[error("unknown")]
-    Unknow,
+    #[error("fatal error occured")]
+    Fatal,
 }
 
 #[derive(Debug, Error, strum::EnumIs)]

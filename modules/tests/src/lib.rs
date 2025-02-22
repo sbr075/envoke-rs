@@ -1,7 +1,9 @@
 #[cfg(test)]
 #[allow(dead_code)]
 mod tests {
-    use envoke::{Envoke, Fill};
+    use std::{collections::BTreeMap, str::FromStr};
+
+    use envoke::{Envoke, Error, Fill};
 
     #[test]
     fn test_load_env_field_name() {
@@ -59,14 +61,19 @@ mod tests {
 
     #[test]
     fn test_load_env_default_t_fallback() {
+        #[derive(Debug, PartialEq, strum::EnumString)]
+        enum Tes {
+            Enum1,
+        }
+
         #[derive(Fill)]
         struct Test {
-            #[fill(env, default_t = 10)]
-            field: i32,
+            #[fill(env, default = Tes::Enum1)]
+            field: Tes,
         }
 
         let test = Test::envoke();
-        assert_eq!(test.field, 10);
+        assert_eq!(test.field, Tes::Enum1);
     }
 
     #[test]
@@ -77,7 +84,7 @@ mod tests {
 
         #[derive(Fill)]
         struct Test {
-            #[fill(env, default_fn = default_i32)]
+            #[fill(env, default = default_i32())]
             field: i32,
         }
 
@@ -101,7 +108,7 @@ mod tests {
     fn test_load_only_default_t() {
         #[derive(Fill)]
         struct Test {
-            #[fill(env, default_t = 10)]
+            #[fill(env, default = 10)]
             field: i32,
         }
 
@@ -111,18 +118,18 @@ mod tests {
 
     #[test]
     fn test_load_only_default_fn() {
-        fn default_i32() -> i32 {
-            10
+        fn default_i32(add: i32) -> i32 {
+            10 + add
         }
 
         #[derive(Fill)]
         struct Test {
-            #[fill(env, default_fn = default_i32)]
+            #[fill(env, default = default_i32(10))]
             field: i32,
         }
 
         let test = Test::envoke();
-        assert_eq!(test.field, 10);
+        assert_eq!(test.field, 20);
     }
 
     #[test]
@@ -231,17 +238,26 @@ mod tests {
 
         #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
         enum Value {
-            String(String),
             Number(i64),
+            String(String),
         }
 
-        // A custom parsing function to convert a vector of u64 into a vector of
-        // Duration
+        impl FromStr for Value {
+            type Err = Error;
+
+            fn from_str(s: &str) -> Result<Self, Self::Err> {
+                if let Ok(num) = s.parse::<i64>() {
+                    Ok(Value::Number(num))
+                } else {
+                    Ok(Value::String(s.to_string()))
+                }
+            }
+        }
+
         fn to_time(secs: Vec<u64>) -> Vec<Duration> {
             secs.into_iter().map(Duration::from_secs).collect()
         }
 
-        // Struct that will be filled with environment variables
         #[derive(Debug, Fill)]
         struct Test {
             // Test HashMap with default delimiter (,)
@@ -252,13 +268,13 @@ mod tests {
             #[fill(env = "TEST_HMAP_2", delimiter = ";")]
             hmap2: HashMap<String, i32>,
 
-            // Test HashMap with default delimiter (,)
+            // Test BTreeMap with default delimiter (,)
             #[fill(env = "TEST_BMAP_1")]
-            bmap1: HashMap<String, String>,
+            bmap1: BTreeMap<String, String>,
 
-            // Test HashMap with custom delimiter (&) and enum parsing
+            // Test BTreeMap with custom delimiter (&) and enum parsing
             #[fill(env = "TEST_BMAP_2", delimiter = "&")]
-            bmap2: HashMap<String, TestEnum>,
+            bmap2: BTreeMap<String, TestEnum>,
 
             // Test HashSet with default delimiter (,)
             #[fill(env = "TEST_HSET_1")]
@@ -268,13 +284,13 @@ mod tests {
             #[fill(env = "TEST_HSET_2", delimiter = "|")]
             hset2: HashSet<String>,
 
-            // Test HashSet with default delimiter (,)
+            // Test BTreeSet with default delimiter (,)
             #[fill(env = "TEST_BSET_1")]
             bset1: BTreeSet<TestEnum>,
 
-            // Test HashSet with custom delimiter (!)
+            // Test BTreeSet with custom delimiter (!)
             #[fill(env = "TEST_BSET_2", delimiter = "!")]
-            bset2: BTreeSet<String>,
+            bset2: BTreeSet<Value>,
 
             // Test Vec with default delimiter (,)
             #[fill(env = "TEST_VEC_1")]
@@ -293,7 +309,7 @@ mod tests {
                 ("TEST_BMAP_1", Some("key1=value1,key2=value2")),
                 ("TEST_BMAP_2", Some("key1=enum1&key2=enum2")),
                 ("TEST_HSET_1", Some("1,2,3")),
-                ("TEST_HSET_2", Some("apple|banana|cherry")),
+                ("TEST_HSET_2", Some("value1|value2|value3")),
                 ("TEST_BSET_1", Some("enum2,enum1")),
                 ("TEST_BSET_2", Some("1!2!foo!4!bar")),
                 ("TEST_VEC_1", Some("true,false,true")),
@@ -301,10 +317,8 @@ mod tests {
             ],
             || {
                 let test = Test::envoke();
-
                 println!("{test:#?}");
 
-                // Test HashMap loading and assertions
                 assert_eq!(test.hmap1.len(), 2);
                 assert_eq!(
                     test.hmap1,
@@ -321,6 +335,67 @@ mod tests {
                         ("key1".to_string(), "value1".to_string()),
                         ("key2".to_string(), "value2".to_string())
                     ])
+                );
+
+                assert_eq!(test.bmap1.len(), 2);
+                assert_eq!(
+                    test.bmap1,
+                    BTreeMap::from([
+                        ("key1".to_string(), "value1".to_string()),
+                        ("key2".to_string(), "value2".to_string())
+                    ])
+                );
+
+                assert_eq!(test.bmap2.len(), 2);
+                assert_eq!(
+                    test.bmap2,
+                    BTreeMap::from([
+                        ("key1".to_string(), TestEnum::Enum1),
+                        ("key2".to_string(), TestEnum::Enum2)
+                    ])
+                );
+
+                assert_eq!(test.hset1.len(), 3);
+                assert_eq!(test.hset1, HashSet::from([1, 2, 3]));
+
+                assert_eq!(test.hset2.len(), 3);
+                assert_eq!(
+                    test.hset2,
+                    HashSet::from([
+                        "value1".to_string(),
+                        "value2".to_string(),
+                        "value3".to_string()
+                    ])
+                );
+
+                assert_eq!(test.bset1.len(), 2);
+                assert_eq!(
+                    test.bset1,
+                    BTreeSet::from([TestEnum::Enum1, TestEnum::Enum2])
+                );
+
+                assert_eq!(test.bset2.len(), 5);
+
+                let expected = BTreeSet::from([
+                    Value::Number(1),
+                    Value::Number(2),
+                    Value::String("foo".to_string()),
+                    Value::Number(4),
+                    Value::String("bar".to_string()),
+                ]);
+                assert!(expected.iter().all(|e| test.bset2.contains(e)));
+
+                assert_eq!(test.vec1.len(), 3);
+                assert_eq!(test.vec1, vec![true, false, true]);
+
+                assert_eq!(test.vec2.len(), 3);
+                assert_eq!(
+                    test.vec2,
+                    vec![
+                        Duration::from_secs(1),
+                        Duration::from_secs(2),
+                        Duration::from_secs(3)
+                    ]
                 );
             },
         );
