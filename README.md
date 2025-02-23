@@ -1,27 +1,27 @@
-# envoke-rs <!-- omit from toc -->
+# envoke-rs
 
 A derive macro for loading environment variables into struct fields
 
+---
+
+[build-image]: https://github.com/sbr075/envoke-rs/actions/workflows/release.yml/badge.svg
+[build]: https://github.com/sbr075/envoke-rs/actions/workflows/release.yml
+[crates.io-image]: https://img.shields.io/badge/crates.io-envoke--rs-orange
+[crates.io]: https://crates.io/crates/envoke-rs
+
 </br>
 
-# Table of Content <!-- omit from toc -->
-- [Attributes](#attributes)
-  - [Container](#container)
-    - [Options](#options)
-    - [Name cases](#name-cases)
-    - [Examples](#examples)
-  - [Field](#field)
-    - [Options](#options-1)
-    - [Examples](#examples-1)
-      - [**Loading an environment variable**](#loading-an-environment-variable)
-      - [**Loading an environment variable with fallbacks**](#loading-an-environment-variable-with-fallbacks)
-      - [**Loading an environment variable with default fallback**](#loading-an-environment-variable-with-default-fallback)
-      - [**Loading an environment variable and parsing with a custom parser**](#loading-an-environment-variable-and-parsing-with-a-custom-parser)
-      - [**Nesting multiple structures together**](#nesting-multiple-structures-together)
-      - [**Disabling prefix and-/or suffix usage**](#disabling-prefix-and-or-suffix-usage)
-  - [Issues, new features, or contributions](#issues-new-features-or-contributions)
-  - [License](#license)
+# Usage
+Add to your `Cargo.toml`
+```toml
+[dependencies]
+envoke = "0.1.0"
+```
 
+or run `cargo add envoke`
+
+## Documenation
+- [Envoke](https://docs.rs/envoke)
 
 </br>
 
@@ -31,28 +31,28 @@ A derive macro for loading environment variables into struct fields
 Container attributes allows you to globally configure how environment variable name are transformed before retrieving from the processe's environment.
 
 ### Options
-| Attribute    | Default        | Description                                                                                                                                                                                                                                                                                                                                                                                  |
-| ------------ | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `prefix`     | None           | Set a custom prefix which will be prepended infront of environment variables before fetching                                                                                                                                                                                                                                                                                                 |
-| `suffix`     | None           | Set a custom prefix which will be appended infront of environment variables before fetching                                                                                                                                                                                                                                                                                                  |
-| `delimiter`  | Underscore (_) | Set a customer delimiter used for separated prefix, environment variable, and suffix. **NB!** If you are using the `rename_all` attribute as well it will take priority over the delimiter. It can still be useful to include the delimiter to ensure the prefix, environment variable, and suffix are separated before renaming occurs otherwise they will be interpreted as a single word! |
-| `rename_all` | None           | Rename all environment variables to a different naming case. See [name cases](#name-cases) for a full list and description of the different options.                                                                                                                                                                                                                                         |
+| Attribute    | Default | Description                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `prefix`     | None    | Set a custom prefix which will be prepended infront of environment variables before fetching                                                                                                                                                                                                                                                                                                 |
+| `suffix`     | None    | Set a custom prefix which will be appended infront of environment variables before fetching                                                                                                                                                                                                                                                                                                  |
+| `delimiter`  | None    | Set a customer delimiter used for separated prefix, environment variable, and suffix. **NB!** If you are using the `rename_all` attribute as well it will take priority over the delimiter. It can still be useful to include the delimiter to ensure the prefix, environment variable, and suffix are separated before renaming occurs otherwise they will be interpreted as a single word! |
+| `rename_all` | None    | Rename all environment variables to a different naming case. See [name cases](#name-cases) for a full list and description of the different options.                                                                                                                                                                                                                                         |
 
 If there are any more attributes you think would be useful open an issue and I will look at it when I have time! - Thanks
 
 </br>
 
 ### Name cases
-| Case                 | Value                  | Example                             | Description                                                                                                        |
-| -------------------- | ---------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Lower case           | `lowercase`            | some_field_name` → `somefieldname   | Converts all characters to lowercase and removes binding characters                                                |
-| Upper case           | `UPPERCASE`            | some_field_name` → `SOMEFIELDNAME   | Converts all characters to uppercase and removes binding characters                                                |
-| Pascal case          | `PascalCase`           | some_field_name` → `SomeFieldName   | Capitalizes the first letter of each word and removes binding                                                      |
-| Camel case           | `camelCase`            | some_field_name` → `someFieldName   | Lowercases the first letter but capitalizes the first letter of subsequent words while removing binding characters |
-| Snake case           | `snake_case`           | someFieldName` → `some_field_name   | Converts names to lowercase and uses underscores `_` to separate words                                             |
-| Screaming snake case | `SCREAMING_SNAKE_CASE` | some_field_name` → `SOME_FIELD_NAME | Converts names to uppercase and uses underscores `_` to separate words                                             |
-| Kebab case           | `kebab-case`           | some_field_name` → `some-field-name | Converts names to lowercase and uses hyphens `-` to separate words                                                 |
-| Screaming kebab case | `SCREAMING-KEBAB-CASE` | some_field_name` → `SOME-FIELD-NAME | Converts names to uppercase and uses hyphens `-` to separate words                                                 |
+| Case                 | Value                  | Description                                                                                                        |
+| -------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Lower case           | `lowercase` or `lower` | Converts all characters to lowercase and removes binding characters                                                |
+| Upper case           | `UPPERCASE` or `UPPER` | Converts all characters to uppercase and removes binding characters                                                |
+| Pascal case          | `PascalCase`           | Capitalizes the first letter of each word and removes binding                                                      |
+| Camel case           | `camelCase`            | Lowercases the first letter but capitalizes the first letter of subsequent words while removing binding characters |
+| Snake case           | `snake_case`           | Converts names to lowercase and uses underscores `_` to separate words                                             |
+| Screaming snake case | `SCREAMING_SNAKE_CASE` | Converts names to uppercase and uses underscores `_` to separate words                                             |
+| Kebab case           | `kebab-case`           | Converts names to lowercase and uses hyphens `-` to separate words                                                 |
+| Screaming kebab case | `SCREAMING-KEBAB-CASE` | Converts names to uppercase and uses hyphens `-` to separate words                                                 |
 
 </br>
 
@@ -97,7 +97,7 @@ Field attributes allows you to configure how each field is individually handled 
 
 ### Examples
 
-#### **Loading an environment variable**
+#### Loading an environment variable
 
 Below is an example of fully and partially setting a structs fields. 
 
@@ -137,7 +137,7 @@ fn main() {
 
 </br>
 
-#### **Loading an environment variable with fallbacks**
+#### Loading an environment variable with fallbacks
 
 Below is an example of setting a field name with multiple fallbacks incase the first environment variable does not exist.
 
@@ -166,7 +166,7 @@ fn main() {
 
 </br>
 
-#### **Loading an environment variable with default fallback**
+#### Loading an environment variable with default fallback
 
 Using the field type's default value
 
@@ -238,7 +238,7 @@ fn main() {
 
 </br>
 
-#### **Loading an environment variable and parsing with a custom parser**
+#### Loading an environment variable and parsing with a custom parser
 ```rust
 use std::time::Duration;
 
@@ -269,7 +269,7 @@ fn main() {
 
 </br>
 
-#### **Nesting multiple structures together**
+#### Nesting multiple structures together
 ```rust
 use envoke::{Envoke, Fill};
 
@@ -304,7 +304,7 @@ fn main() {
 
 </br>
 
-#### **Disabling prefix and-/or suffix usage**
+#### Disabling prefix and-/or suffix usage
 ```rust
 use envoke::{Envoke, Fill};
 
@@ -339,8 +339,15 @@ If you discover any issues, find missing features that would make the crate bett
 
 </br>
 
-## License
+#### License
 
-This project is licensed under either the [APACHE License](LICENSE-APACHE) or the [MIT License](LICENSE-MIT) at your option.
+<sup>
+Licensed under either of <a href="LICENSE-APACHE">Apache License, Version
+2.0</a> or <a href="LICENSE-MIT">MIT license</a> at your option.
+</sup>
 
+</br>
+
+<sub>
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in this crate by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
+</sub>

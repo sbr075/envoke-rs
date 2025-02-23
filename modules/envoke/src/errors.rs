@@ -1,5 +1,6 @@
 use thiserror::Error;
 
+#[doc(hidden)]
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, Error, strum::EnumIs)]
@@ -28,16 +29,16 @@ pub enum RetrieveError {
     #[error("environment variable `{key}` contains invalid Unicode")]
     InvalidUnicode { key: String },
 
-    #[error("fatal error occured")]
+    #[error("fatal error occurred")]
     Fatal,
 }
 
 #[derive(Debug, Error, strum::EnumIs)]
 pub enum Error {
-    #[error("retrieve error occured: {0}")]
+    #[error("retrieve error occurred: {0}")]
     RetrieveError(#[from] RetrieveError),
 
-    #[error("parse error occured: {0}")]
+    #[error("parse error occurred: {0}")]
     ParseError(#[from] ParseError),
 
     #[error("failed to convert environment variable `{key}` to expected type")]
