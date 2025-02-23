@@ -1,3 +1,8 @@
 [workspace]
-members = ["modules/*"]  # Includes all crates inside the modules/ folder
-resolver = "2"           # Use the latest dependency resolver
+members = ["modules/*"]
+resolver = "2"
+
+[workspace.package]
+repository = "https://github.com/sbr075/envoke-rs"
+license = "MIT OR Apache-2.0"
+edition = "2021"

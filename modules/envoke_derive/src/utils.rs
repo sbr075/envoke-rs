@@ -48,7 +48,7 @@ pub fn default_call(field: &Field) -> proc_macro2::TokenStream {
                 quote! { #path(#(#args),*) }
             }
         },
-        None => quote! { panic!("fatal error occured") },
+        None => quote! { panic!("fatal error occurred") },
     }
 }
 
@@ -121,7 +121,7 @@ pub fn env_call(attrs: &ContainerAttributes, field: &Field) -> proc_macro2::Toke
         call
     } else {
         quote! {
-            panic!("fatal error occured")
+            panic!("fatal error occurred")
         }
     }
 }
