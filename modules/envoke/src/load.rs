@@ -95,6 +95,7 @@ where
         .collect()
 }
 
+#[doc(hidden)]
 pub struct Envloader<T> {
     _marker: PhantomData<T>,
 }
@@ -180,6 +181,7 @@ where
     }
 }
 
+#[doc(hidden)]
 pub trait Envload<T> {
     fn load_once<K>(keys: &[K]) -> Result<T>
     where
