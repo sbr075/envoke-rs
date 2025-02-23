@@ -14,4 +14,5 @@ All notable changes to this project will be documented in this file.
 
 - Update examples ([8ef052f](https://github.com/sbr075/envoke-rs/commit/8ef052fa7cbe3be460bdd6a4f2d87947d071fc64))
 - Add docs documentation ([9235200](https://github.com/sbr075/envoke-rs/commit/92352000153964c8614984232dcd5949cc9e79ec))
+- Add docs documentation ([a4d3192](https://github.com/sbr075/envoke-rs/commit/a4d3192f4b3bc104d9e12c989103d7679404d633))
 
