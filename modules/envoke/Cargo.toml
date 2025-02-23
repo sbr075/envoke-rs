@@ -1,7 +1,17 @@
 [package]
 name = "envoke"
 version = "0.1.0"
-edition = "2021"
+description = "A simple and ergonomic way to load environment variables into struct fields."
+categories = ["Configuration"]
+keywords = [
+    "envoke",
+    "envvar",
+    "parse",
+    "utility"
+]
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
 
 [dependencies]
 envoke_derive = { path = "../envoke_derive" }
