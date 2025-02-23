@@ -64,7 +64,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
             default_call(&field)
         } else {
             quote! {
-                panic!("field required attributes")
+                panic!(format!("atleast one of field attributes `nested`, `env`, or `default` is required to be set for `{}`", #ident))
             }
         };
 

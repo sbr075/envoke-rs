@@ -6,6 +6,28 @@ mod tests {
     use envoke::{Envoke, Error, Fill};
 
     #[test]
+    fn test_partial_initialization() {
+        #[derive(Fill)]
+        struct Test {
+            #[fill(env)]
+            field1: String,
+
+            #[fill(env, default)]
+            field2: i32,
+        }
+
+        temp_env::with_vars([("field1", Some("value")), ("field2", Some("10"))], || {
+            let test = Test {
+                field2: 20,
+                ..Envoke::envoke()
+            };
+
+            assert_eq!(test.field1, "value".to_string());
+            assert_eq!(test.field2, 20);
+        });
+    }
+
+    #[test]
     fn test_load_env_field_name() {
         #[derive(Fill)]
         struct Test {
@@ -277,7 +299,7 @@ mod tests {
             bmap2: BTreeMap<String, TestEnum>,
 
             // Test HashSet with default delimiter (,)
-            #[fill(env = "TEST_HSET_1")]
+            #[fill(env = "TEST_HSET_1", default = HashSet::from([1, 2, 3]))]
             hset1: HashSet<i32>,
 
             // Test HashSet with custom delimiter (|)
@@ -308,7 +330,6 @@ mod tests {
                 ("TEST_HMAP_2", Some("key1=1;key2=2;key3=3")),
                 ("TEST_BMAP_1", Some("key1=value1,key2=value2")),
                 ("TEST_BMAP_2", Some("key1=enum1&key2=enum2")),
-                ("TEST_HSET_1", Some("1,2,3")),
                 ("TEST_HSET_2", Some("value1|value2|value3")),
                 ("TEST_BSET_1", Some("enum2,enum1")),
                 ("TEST_BSET_2", Some("1!2!foo!4!bar")),
