@@ -8,51 +8,175 @@ use syn::parse::Parse;
 pub enum Case {
     /// Converts all characters to lowercase and removes binding characters.
     ///
-    /// Example: `some_field_name` → `somefieldname`
-    #[strum(serialize = "lowercase")]
+    /// Used if [ContainerAttributes::rename_all] is set to `lowercase` or
+    /// `lower`
+    ///
+    /// ### Example
+    ///
+    /// Renames `EXAMPLE_ENV` to `exampleenv`
+    ///
+    /// ```
+    /// #[derive(Fill)]
+    /// #[fill(rename_all = "lowercase")]
+    /// struct Example {
+    ///     #[fill(env = "EXAMPLE_ENV")]
+    ///     field: String,
+    /// }
+    ///
+    /// let _ = Example::try_invoke()?;
+    /// ```
+    #[strum(serialize = "lowercase", serialize = "lower")]
     Lower,
 
     /// Converts all characters to uppercase and removes binding characters.
     ///
-    /// Example: `some_field_name` → `SOMEFIELDNAME`
-    #[strum(serialize = "UPPERCASE")]
+    /// Used if [ContainerAttributes::rename_all] is set to `UPPERCASE` or
+    /// `UPPER`
+    ///
+    /// ### Example
+    ///
+    /// Renames `example_env` to `EXAMPLEENV`
+    ///
+    /// ```
+    /// #[derive(Fill)]
+    /// #[fill(rename_all = "UPPERCASE")]
+    /// struct Example {
+    ///     #[fill(env = "example_env")]
+    ///     field: String,
+    /// }
+    ///
+    /// let _ = Example::try_invoke()?;
+    /// ```
+    #[strum(serialize = "UPPERCASE", serialize = "UPPER")]
     Upper,
 
     /// Capitalizes the first letter of each word and removes binding
     /// characters.
     ///
-    /// Example: `some_field_name` → `SomeFieldName`
+    /// Used if [ContainerAttributes::rename_all] is set to `PascalCase`
+    ///
+    /// ### Example
+    ///
+    /// Renames `some_field_name` to `SomeFieldName`
+    ///
+    /// ```
+    /// #[derive(Fill)]
+    /// #[fill(rename_all = "PascalCase")]
+    /// struct Example {
+    ///     #[fill(env = "some_field_name")]
+    ///     field: String,
+    /// }
+    ///
+    /// let _ = Example::try_invoke()?;
+    /// ```
     #[strum(serialize = "PascalCase")]
     Pascal,
 
     /// Lowercases the first letter but capitalizes the first letter of
     /// subsequent words while removing binding characters.
     ///
-    /// Example: `some_field_name` → `someFieldName`
+    /// Used if [ContainerAttributes::rename_all] is set to `camelCase`
+    ///
+    /// ### Example
+    ///
+    /// Renames `some_field_name` to `someFieldName`
+    ///
+    /// ```
+    /// #[derive(Fill)]
+    /// #[fill(rename_all = "camelCase")]
+    /// struct Example {
+    ///     #[fill(env = "some_field_name")]
+    ///     field: String,
+    /// }
+    ///
+    /// let _ = Example::try_invoke()?;
+    /// ```
     #[strum(serialize = "camelCase")]
     Camel,
 
     /// Converts names to lowercase and uses underscores `_` to separate words.
     ///
-    /// Example: `someFieldName` → `some_field_name`
+    /// Used if [ContainerAttributes::rename_all] is set to `snake_case`
+    ///
+    /// ### Example
+    ///
+    /// Renames `someFieldName` to `some_field_name`
+    ///
+    /// ```
+    /// #[derive(Fill)]
+    /// #[fill(rename_all = "snake_case")]
+    /// struct Example {
+    ///     #[fill(env = "someFieldName")]
+    ///     field: String,
+    /// }
+    ///
+    /// let _ = Example::try_invoke()?;
+    /// ```
     #[strum(serialize = "snake_case")]
     Snake,
 
     /// Converts names to uppercase and uses underscores `_` to separate words.
     ///
-    /// Example: `some_field_name` → `SOME_FIELD_NAME`
+    /// Used if [ContainerAttributes::rename_all] is set to
+    /// `SCREAMING_SNAKE_CASE`
+    ///
+    /// ### Example
+    ///
+    /// Renames `some_field_name` to `SOME_FIELD_NAME`
+    ///
+    /// ```
+    /// #[derive(Fill)]
+    /// #[fill(rename_all = "SCREAMING_SNAKE_CASE")]
+    /// struct Example {
+    ///     #[fill(env = "some_field_name")]
+    ///     field: String,
+    /// }
+    ///
+    /// let _ = Example::try_invoke()?;
+    /// ```
     #[strum(serialize = "SCREAMING_SNAKE_CASE")]
     ScreamingSnake,
 
     /// Converts names to lowercase and uses hyphens `-` to separate words.
     ///
-    /// Example: `some_field_name` → `some-field-name`
+    /// Used if [ContainerAttributes::rename_all] is set to `kebab-case`
+    ///
+    /// ### Example
+    ///
+    /// Renames `some_field_name` to `some-field-name`
+    ///
+    /// ```
+    /// #[derive(Fill)]
+    /// #[fill(rename_all = "kebab-case")]
+    /// struct Example {
+    ///     #[fill(env = "some_field_name")]
+    ///     field: String,
+    /// }
+    ///
+    /// let _ = Example::try_invoke()?;
+    /// ```
     #[strum(serialize = "kebab-case")]
     Kebab,
 
     /// Converts names to uppercase and uses hyphens `-` to separate words.
     ///
-    /// Example: `some_field_name` → `SOME-FIELD-NAME`
+    /// Used if [ContainerAttributes::rename_all] is set to
+    /// `SCREAMING-KEBAB-CASE`
+    ///
+    /// ### Example
+    ///
+    /// Renames `some_field_name` to `SOME-FIELD-NAME`
+    ///
+    /// ```
+    /// #[derive(Fill)]
+    /// #[fill(rename_all = "SCREAMING-KEBAB-CASE")]
+    /// struct Example {
+    ///     #[fill(env = "some_field_name")]
+    ///     field: String,
+    /// }
+    ///
+    /// let _ = Example::try_invoke()?;
+    /// ```
     #[strum(serialize = "SCREAMING-KEBAB-CASE")]
     ScreamingKebab,
 }
@@ -86,10 +210,46 @@ impl From<&Case> for ConvertCase {
 pub struct ContainerAttributes {
     /// Prefix to prepend to all environment variable names.
     ///
+    /// ### Example
+    ///
+    /// The example below will load the environment variable `TEST_field`
+    ///
+    /// ```
+    /// #[derive(Fill)]
+    /// #[fill(prefix = "TEST", delimiter = "_")]
+    /// struct Example {
+    ///     #[fill(env)]
+    ///     field: String,
+    ///     ...
+    /// }
+    ///
+    /// let _ = Example::try_invoke()?;
+    /// ```
+    ///
+    /// </br>
+    ///
     /// **Default:** `None`
     pub prefix: Option<String>,
 
     /// Suffix to append to all environment variable names.
+    ///
+    /// ### Example
+    ///
+    /// The example below will load the environment variable `field_TEST`
+    ///
+    /// ```
+    /// #[derive(Fill)]
+    /// #[fill(suffix = "TEST", delimiter = "_")]
+    /// struct Example {
+    ///     #[fill(env)]
+    ///     field: String,
+    ///     ...
+    /// }
+    ///
+    /// let _ = Example::try_invoke()?;
+    /// ```
+    ///
+    /// </br>
     ///
     /// **Default:** `None`
     pub suffix: Option<String>,
@@ -97,13 +257,38 @@ pub struct ContainerAttributes {
     /// Delimiter used to separate the prefix, environment variable name, and
     /// suffix.
     ///
-    /// If [`ContainerAttributes::case`] is set, it will override this
-    /// delimiter.
+    /// If [`ContainerAttributes::rename_all`] is set, it will override this
+    /// delimiter. Although it can still be good to include the delimiter to
+    /// seperate the prefix/suffix from the original name!
+    ///
+    /// See [ContainerAttributes::prefix] or [ContainerAttributes::suffix] for
+    /// examples on how to use this attribute
     ///
     /// **Default:** `"_"`
     pub delimiter: Option<String>,
 
     /// Converts environment variable names to the specified case format.
+    ///
+    /// See [Case] for a full list of supported cases
+    ///
+    /// ### Example
+    ///
+    /// The example below will load the environment variable
+    /// `PREFIX_FIELD_SUFFIX`
+    ///
+    /// ```
+    /// #[derive(Fill)]
+    /// #[fill(prefix = "prefix", suffix = "prefix", delimiter = "_", rename_all = "UPPERCASE")]
+    /// struct Example {
+    ///     #[fill(env)]
+    ///     field: String,
+    ///     ...
+    /// }
+    ///
+    /// let _ = Example::try_invoke()?;
+    /// ```
+    ///
+    /// </br>
     ///
     /// **Default:** `None`
     pub rename_all: Option<Case>,
@@ -226,7 +411,45 @@ pub struct FieldAttributes {
     /// The first found value is parsed and set as the field value. If parsing
     /// fails, the operation stops, and no further variables are checked.
     ///
-    /// **Default:** The field name.
+    /// ### Usage
+    ///
+    /// **1.** `env`
+    ///
+    /// The example below will load the value from environment variable `field`
+    /// ```
+    /// #[derive(Fill)]
+    /// struct Example {
+    ///     #[fill(env)]
+    ///     field: i32,
+    ///     ...
+    /// }
+    ///
+    /// let _ = Example::try_invoke()?;
+    /// ```
+    ///
+    /// </br>
+    ///
+    /// **2.** `env = "<key>"`
+    ///
+    /// The example below will load the value from environment variable `ENV`
+    /// ```
+    /// #[derive(Fill)]
+    /// struct Example {
+    ///     #[fill(env = "ENV")]
+    ///     field: i32,
+    ///     ...
+    /// }
+    ///
+    /// let _ = Example::try_invoke()?;
+    /// ```
+    ///
+    /// `env` and `env = "<key>"` can be used together, as well as can be added
+    /// on as many times as needed. Note that they will be loaded in the order
+    /// they are defined
+    ///
+    /// </br>
+    ///
+    /// **Default:** `None`.
     pub envs: Option<Vec<String>>,
 
     /// Use the default value if the environment variable is not found
@@ -234,22 +457,123 @@ pub struct FieldAttributes {
     /// This function can be used without specifying `envs` to provide a static
     /// fallback.
     ///
+    /// ### Usage
+    ///
+    /// **1.** `default`
+    ///
+    /// The example below will `field` with `i32::default()` which is `0`
+    /// ```
+    /// #[derive(Fill)]
+    /// struct Example {
+    ///     #[fill(default)]
+    ///     field: i32,
+    ///     ...
+    /// }
+    ///
+    /// let _ = Example::try_invoke()?;
+    /// ```
+    ///
+    /// </br>
+    ///
+    /// **2.** `default = <value>`
+    ///
+    /// The example below will `field` with `10`
+    /// ```
+    /// #[derive(Fill)]
+    /// struct Example {
+    ///     #[fill(default = 10)]
+    ///     field: i32,
+    ///     ...
+    /// }
+    ///
+    /// let _ = Example::try_invoke()?;
+    /// ```
+    ///
+    /// </br>
+    ///
+    /// **3.** `default = <func>()`
+    ///
+    /// The example below will `field` with `10` (if result remains unchanged)
+    /// ```
+    /// fn field_default() -> i32 {
+    ///     let result = 10;
+    ///     ... // extra steps if need
+    ///     result
+    /// }
+    ///
+    /// #[derive(Fill)]
+    /// struct Example {
+    ///     #[fill(default = field_default())]
+    ///     field: i32
+    ///     ...
+    /// }
+    ///
+    /// let _ = Example::try_invoke()?;
+    /// ```
+    ///
+    /// Aditionally arguments can be parsed to field_default() if needed
+    ///
+    /// </br>
+    ///
     /// **Default:** `None`
     pub default: Option<DefaultValue>,
 
-    /// A function to parse the loaded value with before applying to the field
+    /// A function to parse the loaded value with before applying to the field.
+    /// Requires `arg_type` to be set if used.
     ///
     /// Allows for custom types which normally isn't supported by envoke-rs
+    ///
+    /// ### Example
+    ///
+    /// The example below takes the value from environment variable `field` and
+    /// runs it through the `to_duration` function before assigning it to the
+    /// field value
+    ///
+    /// ```
+    /// fn to_duration(secs: u64) -> std::time::Duration {
+    ///     std::time::Duration::from_secs(secs)
+    /// }
+    ///
+    /// #[derive(Fill)]
+    /// struct Example {
+    ///     #[fill(env, parse_fn = to_duration, arg_type = u64)]
+    ///     field: std::time::Duration,
+    ///     ...
+    /// }
+    ///
+    /// let _ = Example::try_invoke()?;
+    /// ```
+    ///
+    /// </br>
     ///
     /// **Default:** `None`
     pub parse_fn: Option<syn::Path>,
 
-    /// Arg type in the parse_fn function
+    /// Arg type in the parse_fn function. Required by `parse_fn` if used.
+    ///
+    /// See [FieldAttributes::parse_fn] for an example on how to use it
     ///
     /// **Default:** `None`
     pub arg_type: Option<syn::Type>,
 
     /// Delimiter used when parsing list-type fields (e.g., `Vec<String>`).
+    ///
+    /// ### Example
+    ///
+    /// The example below will parse, e.g., `value1;value2;value3` to
+    /// Vec<String>. Note that the delimiter `=` is reserved as its the
+    /// delimiter for key and values in a map string
+    ///
+    /// ```
+    /// #[derive(Fill)]
+    /// struct Example {
+    ///     #[fill(env, delimiter = ";")]
+    ///     field: Vec<String>,
+    ///     ...
+    /// }
+    /// ```
+    ///
+    /// </br>
     ///
     /// **Default:** `","`
     pub delimiter: Option<String>,
@@ -270,6 +594,28 @@ pub struct FieldAttributes {
 
     /// Indicates the the field is a nested struct in which the parser needs to
     /// call try_envoke on
+    ///
+    /// ### Example
+    ///
+    /// ```rust
+    /// #[derive(Fill)]
+    /// struct Inner {
+    ///     #[fill(env)]
+    ///     field: String,
+    ///     ...
+    /// }
+    ///
+    /// #[derive(Fill)]
+    /// struct Outer {
+    ///     #[fill(nested)]
+    ///     inner: Inner,
+    ///     ...
+    /// }
+    /// ```
+    ///
+    /// The structs can nested multiple times
+    ///
+    /// </br>
     ///
     /// **Default**: false
     pub nested: bool,
