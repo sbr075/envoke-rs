@@ -11,6 +11,10 @@ All notable changes to this project will be documented in this file.
 - Allow parse_with for just defaults as well ([c00a9f9](https://github.com/sbr075/envoke-rs/commit/c00a9f94c54cb8692913c567be228903d59d7716))
 - Use published derive crate ([1cc8458](https://github.com/sbr075/envoke-rs/commit/1cc8458dbea0e7023fc8fe223ced2a30f0eaa74b))
 
+### 🐛 Bug Fixes
+
+- Fix envoke category slugs ([de394b5](https://github.com/sbr075/envoke-rs/commit/de394b5c6c85c365163eaee2c985a0635e0e224e))
+
 ### 📚 Documentation
 
 - Update examples ([8ef052f](https://github.com/sbr075/envoke-rs/commit/8ef052fa7cbe3be460bdd6a4f2d87947d071fc64))
