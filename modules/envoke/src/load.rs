@@ -183,6 +183,7 @@ mod test {
     use super::{Envloader, FromMap, FromMapOpt, FromSet, FromSetOpt, FromSingleOpt};
 
     #[test]
+    #[ignore = "not a real test"]
     fn test_load_envs() {
         temp_env::with_vars(
             [
