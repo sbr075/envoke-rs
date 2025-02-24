@@ -6,7 +6,7 @@ A simple and ergonomic way to load environment variables into struct fields. To 
 Add to your `Cargo.toml`
 ```toml
 [dependencies]
-envoke = "0.1.0"
+envoke = "0.1.1"
 ```
 
 or run `cargo add envoke`
