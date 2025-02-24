@@ -259,7 +259,7 @@ pub struct ContainerAttributes {
     ///
     /// If [`ContainerAttributes::rename_all`] is set, it will override this
     /// delimiter. Although it can still be good to include the delimiter to
-    /// seperate the prefix/suffix from the original name!
+    /// separate the prefix/suffix from the original name!
     ///
     /// See [ContainerAttributes::prefix] or [ContainerAttributes::suffix] for
     /// examples on how to use this attribute
@@ -511,7 +511,7 @@ pub struct FieldAttributes {
     /// let _ = Example::try_invoke()?;
     /// ```
     ///
-    /// Aditionally arguments can be parsed to field_default() if needed
+    /// Additionally arguments can be parsed to field_default() if needed
     ///
     /// </br>
     ///
@@ -556,6 +556,32 @@ pub struct FieldAttributes {
     /// **Default:** `None`
     pub arg_type: Option<syn::Type>,
 
+    /// A function to call after the value is loaded and parsed for extra
+    /// validations, e.g., ensuring i64 is above 0
+    ///
+    /// ### Example
+    ///
+    /// The example below takes and i64 and checks that it is above 0
+    ///
+    /// ```
+    /// fn above_zero(secs: u64) -> std::result::Result<()> {
+    ///     match secs > 0 {
+    ///         true => Ok(),
+    ///         false => Err("duration cannot be less than 0")
+    ///     }
+    /// }
+    ///
+    /// #[derive(Fill)]
+    /// struct Example {
+    ///     #[fill(env, parse_fn = to_duration, arg_type = u64, validate_fn = above_zero)]
+    ///     field: std::time::Duration,
+    ///     ...
+    /// }
+    /// ```
+    ///
+    /// **Default:** `None`
+    pub validate_fn: Option<syn::Path>,
+
     /// Delimiter used when parsing list-type fields (e.g., `Vec<String>`).
     ///
     /// ### Example
@@ -578,14 +604,14 @@ pub struct FieldAttributes {
     /// **Default:** `","`
     pub delimiter: Option<String>,
 
-    /// Disable adding prefix to this environemnt variables. This will also
+    /// Disable adding prefix to this environment variables. This will also
     /// remove the delimiter that wouldn't normally be between the environment
     /// variable and prefix
     ///
     /// **Default:** `false`
     pub no_prefix: bool,
 
-    /// Disable adding prefix to this environemnt variables. This will also
+    /// Disable adding prefix to this environment variables. This will also
     /// remove the delimiter that wouldn't normally be between the environment
     /// variable and suffix
     ///
@@ -696,6 +722,16 @@ impl FieldAttributes {
 
                     let arg_type = meta.value()?.parse()?;
                     fa.arg_type = Some(arg_type);
+                    return Ok(());
+                }
+
+                if meta.path.is_ident("validate_fn") {
+                    if fa.validate_fn.is_some() {
+                        return Err(meta.error("field attribute `validate_fn` already set"));
+                    }
+
+                    let validate_fn = meta.value()?.parse()?;
+                    fa.validate_fn = Some(validate_fn);
                     return Ok(());
                 }
 

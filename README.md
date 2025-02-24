@@ -20,7 +20,7 @@ envoke = "0.1.0"
 
 or run `cargo add envoke`
 
-## Documenation
+## Documentation
 - [Envoke](https://docs.rs/envoke)
 
 </br>
