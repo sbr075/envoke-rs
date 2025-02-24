@@ -241,7 +241,7 @@ mod load;
 pub use errors::{Error, ParseError, Result, RetrieveError};
 
 #[doc(hidden)]
-pub use load::{Envload, Envloader};
+pub use load::{Envloader, FromMap, FromMapOpt, FromSet, FromSetOpt, FromSingleOpt};
 
 #[doc(hidden)]
 pub use envoke_derive::Fill;

@@ -1,16 +1,9 @@
-use std::{
-    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
-    env,
-    fmt::Debug,
-    hash::Hash,
-    marker::PhantomData,
-    str::FromStr,
-};
+use std::{env, marker::PhantomData, str::FromStr};
 
 use crate::errors::{ParseError, Result, RetrieveError};
 
-fn load_once<T: FromStr, K: AsRef<str>>(keys: &[K]) -> Result<T> {
-    for key in keys {
+fn load_once<T: FromStr>(envs: &[impl AsRef<str>]) -> Result<T> {
+    for key in envs {
         let key = key.as_ref().trim();
 
         let value = match env::var(key) {
@@ -32,7 +25,7 @@ fn load_once<T: FromStr, K: AsRef<str>>(keys: &[K]) -> Result<T> {
     }
 
     Err(RetrieveError::NotFound {
-        keys: keys
+        keys: envs
             .iter()
             .map(|e| format!("`{}`", e.as_ref()))
             .collect::<Vec<String>>()
@@ -74,10 +67,10 @@ where
         .collect()
 }
 
-fn parse_set<T, S>(sequence: &str, delim: &str) -> std::result::Result<S, ParseError>
+fn parse_set<S, V>(sequence: &str, delim: &str) -> std::result::Result<S, ParseError>
 where
-    T: FromStr,
-    S: FromIterator<T>,
+    V: FromStr,
+    S: FromIterator<V>,
 {
     sequence
         .trim()
@@ -95,140 +88,141 @@ where
         .collect()
 }
 
-#[doc(hidden)]
 pub struct Envloader<T> {
     _marker: PhantomData<T>,
 }
 
-impl<K, V> Envloader<HashMap<K, V>>
+pub trait FromMap<M, K, V> {
+    fn load_once(envs: &[impl AsRef<str>], _delim: &str) -> Result<M>;
+}
+
+impl<M, K, V> FromMap<M, K, V> for Envloader<M>
 where
-    K: FromStr + Hash + Eq,
+    K: FromStr,
     V: FromStr,
+    M: FromIterator<(K, V)>,
 {
-    pub fn load_once<E>(keys: &[E], delim: &str) -> Result<HashMap<K, V>>
-    where
-        E: AsRef<str>,
-    {
-        let value: String = load_once(keys)?;
+    fn load_once(envs: &[impl AsRef<str>], delim: &str) -> Result<M> {
+        let value: String = load_once(envs)?;
         parse_map(&value, delim).map_err(|e| e.into())
     }
 }
 
-impl<K, V> Envloader<BTreeMap<K, V>>
+pub trait FromMapOpt<M, K, V> {
+    fn load_once(envs: &[impl AsRef<str>], _delim: &str) -> Result<Option<M>>;
+}
+
+impl<M, K, V> FromMapOpt<M, K, V> for Envloader<Option<M>>
 where
-    K: FromStr + Ord,
+    K: FromStr,
+    V: FromStr,
+    M: FromIterator<(K, V)>,
+{
+    fn load_once(envs: &[impl AsRef<str>], delim: &str) -> Result<Option<M>> {
+        let value: String = load_once(envs)?;
+        parse_map(&value, delim).map(Some).map_err(|e| e.into())
+    }
+}
+
+pub trait FromSet<S, V> {
+    fn load_once(envs: &[impl AsRef<str>], _delim: &str) -> Result<S>;
+}
+
+impl<S, V> FromSet<S, V> for Envloader<S>
+where
+    V: FromStr,
+    S: FromIterator<V>,
+{
+    fn load_once(envs: &[impl AsRef<str>], delim: &str) -> Result<S> {
+        let value: String = load_once(envs)?;
+        parse_set(&value, delim).map_err(|e| e.into())
+    }
+}
+
+pub trait FromSetOpt<S, V> {
+    fn load_once(envs: &[impl AsRef<str>], _delim: &str) -> Result<Option<S>>;
+}
+
+impl<S, V> FromSetOpt<S, V> for Envloader<Option<S>>
+where
+    V: FromStr,
+    S: FromIterator<V>,
+{
+    fn load_once(envs: &[impl AsRef<str>], delim: &str) -> Result<Option<S>> {
+        let value: String = load_once(envs)?;
+        parse_set(&value, delim).map(Some).map_err(|e| e.into())
+    }
+}
+
+pub trait FromSingleOpt<V> {
+    fn load_once(envs: &[impl AsRef<str>], _delim: &str) -> Result<Option<V>>;
+}
+
+impl<V> FromSingleOpt<V> for Envloader<Option<V>>
+where
     V: FromStr,
 {
-    pub fn load_once<E>(keys: &[E], delim: &str) -> Result<BTreeMap<K, V>>
-    where
-        E: AsRef<str>,
-    {
-        let value: String = load_once(keys)?;
-        parse_map(&value, delim).map_err(|e| e.into())
+    fn load_once(envs: &[impl AsRef<str>], _delim: &str) -> Result<Option<V>> {
+        load_once(envs).map(Some)
     }
 }
 
-impl<T> Envloader<HashSet<T>>
+impl<V> Envloader<V>
 where
-    T: FromStr + Hash + Eq,
+    V: FromStr,
 {
-    pub fn load_once<E>(keys: &[E], delim: &str) -> Result<HashSet<T>>
-    where
-        E: AsRef<str>,
-    {
-        let value: String = load_once(keys)?;
-        parse_set(&value, delim).map_err(|e| e.into())
-    }
-}
-
-impl<T> Envloader<BTreeSet<T>>
-where
-    T: FromStr + Ord,
-{
-    pub fn load_once<E>(keys: &[E], delim: &str) -> Result<BTreeSet<T>>
-    where
-        E: AsRef<str>,
-    {
-        let value: String = load_once(keys)?;
-        parse_set(&value, delim).map_err(|e| e.into())
-    }
-}
-
-impl<T> Envloader<Vec<T>>
-where
-    T: FromStr,
-{
-    pub fn load_once<E>(keys: &[E], delim: &str) -> Result<Vec<T>>
-    where
-        E: AsRef<str>,
-    {
-        let value: String = load_once(keys)?;
-        parse_set(&value, delim).map_err(|e| e.into())
-    }
-}
-
-impl<T> Envloader<Option<T>>
-where
-    T: FromStr,
-{
-    /// Iterates through the list of environment variables and returns the first
-    /// occurrence found
-    pub fn load_once<K>(keys: &[K]) -> Result<Option<T>>
-    where
-        K: AsRef<str> + Debug,
-    {
-        load_once(keys).map(Some)
-    }
-}
-
-#[doc(hidden)]
-pub trait Envload<T> {
-    fn load_once<K>(keys: &[K]) -> Result<T>
-    where
-        K: AsRef<str> + Debug;
-}
-
-impl<T> Envload<T> for Envloader<T>
-where
-    T: FromStr,
-{
-    /// Iterates through the list of environment variables and returns the first
-    /// occurrence found
-    ///
-    /// If no environment variables are found, the function panics
-    fn load_once<K>(keys: &[K]) -> Result<T>
-    where
-        K: AsRef<str>,
-    {
-        load_once(keys)
+    pub fn load_once(envs: &[impl AsRef<str>], _delim: &str) -> Result<V> {
+        load_once(envs)
     }
 }
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use std::collections::{HashMap, HashSet};
+
+    use super::{Envloader, FromMap, FromMapOpt, FromSet, FromSetOpt, FromSingleOpt};
 
     #[test]
     fn test_load_envs() {
         temp_env::with_vars(
             [
+                ("KEY_0", Some("Hello")),
                 ("KEY_1", Some("123")),
                 ("KEY_2", Some("Hello, World!")),
                 ("KEY_4", Some("Foo, bar!")),
                 ("KEY_5", Some("hello, world,there!")),
+                ("KEY_6", Some("key1=value1,key2=value2")),
             ],
             || {
-                let key_1 = Envloader::<i32>::load_once(&["KEY_1"]);
-                let key_2 = Envloader::<Option<String>>::load_once(&["KEY_2"]);
-                let key_3 = Envloader::<Option<String>>::load_once(&["KEY_3"]);
-                let key_4 = Envloader::<Option<String>>::load_once(&["KEY_3", "KEY_4"]);
+                let key_0 = Envloader::<String>::load_once(&["KEY_0"], ",");
+                let key_1 = Envloader::<i32>::load_once(&["KEY_1"], ",");
+                let key_2 = <Envloader<Option<String>> as FromSingleOpt<String>>::load_once(
+                    &["KEY_2"],
+                    ",",
+                );
+                let key_3 = <Envloader<Option<String>> as FromSingleOpt<String>>::load_once(
+                    &["KEY_3"],
+                    ",",
+                );
+                let key_4 = <Envloader<Option<String>> as FromSingleOpt<String>>::load_once(
+                    &["KEY_3", "KEY_4"],
+                    ",",
+                );
                 let key_5 = Envloader::<Vec<String>>::load_once(&["KEY_5"], ",");
+                let key_6 = Envloader::<HashMap<String, String>>::load_once(&["KEY_6"], ",");
+                let key_7 =
+                    Envloader::<Option<HashMap<String, String>>>::load_once(&["KEY_7"], ",");
+                let key_8 = Envloader::<Option<HashSet<String>>>::load_once(&["KEY_8"], ",");
 
+                println!("{key_0:?}");
                 println!("{key_1:?}");
                 println!("{key_2:?}");
                 println!("{key_3:?}");
                 println!("{key_4:?}");
                 println!("{key_5:?}");
+                println!("{key_6:?}");
+                println!("{key_7:?}");
+                println!("{key_8:?}");
 
                 assert!(1 == 2)
             },

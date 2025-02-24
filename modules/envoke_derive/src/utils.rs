@@ -1,6 +1,6 @@
 use convert_case::Casing;
 use quote::quote;
-use syn::{Data, Fields, FieldsNamed, PathArguments, Type};
+use syn::{Data, Fields, FieldsNamed, GenericArgument, PathArguments, Type};
 
 use crate::{attr::ContainerAttributes, Field};
 
@@ -14,21 +14,34 @@ pub fn get_fields(data: Data) -> FieldsNamed {
     }
 }
 
-pub fn can_be_empty(ty: &Type) -> bool {
-    match ty {
-        Type::Path(path) => path
-            .path
-            .segments
-            .iter()
-            .any(|segment| matches!(segment.arguments, PathArguments::AngleBracketed(_))),
-        _ => false,
-    }
-}
-
 pub fn is_optional(ty: &Type) -> bool {
     match ty {
         Type::Path(path) => path.path.segments[0].ident == "Option",
         _ => false,
+    }
+}
+
+fn get_inner_types(ty: &Type) -> Option<Vec<&Type>> {
+    match ty {
+        Type::Path(path) => match path.path.segments.get(0) {
+            Some(segment) => match &segment.arguments {
+                PathArguments::AngleBracketed(args) => {
+                    let inners = args
+                        .args
+                        .iter()
+                        .filter_map(|e| match e {
+                            GenericArgument::Type(ty) => Some(ty),
+                            _ => None,
+                        })
+                        .collect();
+
+                    Some(inners)
+                }
+                _ => None,
+            },
+            None => None,
+        },
+        _ => None,
     }
 }
 
@@ -86,13 +99,16 @@ pub fn env_call(attrs: &ContainerAttributes, field: &Field) -> proc_macro2::Toke
             })
             .collect();
 
-        let requires_delim = can_be_empty(ty) && !is_optional(ty);
         let delim = field.attrs.delimiter.as_deref().unwrap_or(",");
-
-        let base_call = if requires_delim {
-            quote! { envoke::Envloader::<#ty>::load_once(&[#(#envs),*], #delim) }
-        } else {
-            quote! { envoke::Envloader::<#ty>::load_once(&[#(#envs),*]) }
+        let is_optional = is_optional(ty);
+        let base_call = match is_optional {
+            true => {
+                let inner_types = get_inner_types(ty).unwrap();
+                quote! { <envoke::Envloader<#ty> as FromSingleOpt<(#(#inner_types),*)>>::load_once(&[#(#envs),*], #delim) }
+            }
+            false => {
+                quote! { envoke::Envloader::<#ty>::load_once(&[#(#envs),*], #delim) }
+            }
         };
 
         let mut call = match field.attrs.default.is_some() {
@@ -113,6 +129,16 @@ pub fn env_call(attrs: &ContainerAttributes, field: &Field) -> proc_macro2::Toke
                 }
             }
         };
+
+        if let Some(validate_fn) = &field.attrs.validate_fn {
+            call = quote! {
+                {
+                    let value = #call;
+                    #validate_fn(&value).map_err(Error::ValidationError)?;
+                    value
+                }
+            };
+        }
 
         if let Some(parse_fn) = &field.attrs.parse_fn {
             call = quote! { #parse_fn(#call) }

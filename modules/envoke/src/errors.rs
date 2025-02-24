@@ -43,4 +43,7 @@ pub enum Error {
 
     #[error("failed to convert environment variable `{key}` to expected type")]
     ConvertError { key: String },
+
+    #[error("validation error occurred: {0}")]
+    ValidationError(String),
 }

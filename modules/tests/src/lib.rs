@@ -4,6 +4,7 @@ mod tests {
     use std::{collections::BTreeMap, str::FromStr};
 
     use envoke::{Envoke, Error, Fill};
+    use secrecy::Secret;
 
     #[test]
     fn test_partial_initialization() {
@@ -60,12 +61,12 @@ mod tests {
         #[derive(Fill)]
         struct Test {
             #[fill(env, env = "ENV1", env = "ENV2")]
-            field: String,
+            field: Option<String>,
         }
 
         temp_env::with_var("ENV1", Some("value"), || {
             let test = Test::envoke();
-            assert_eq!(test.field, "value".to_string())
+            assert_eq!(test.field, Some("value".to_string()))
         });
     }
 
@@ -178,6 +179,33 @@ mod tests {
         #[derive(Fill)]
         struct Test {
             #[fill(env = "TEST_ENV", parse_fn = to_time, arg_type = u64)]
+            field: Duration,
+        }
+
+        temp_env::with_var("TEST_ENV", Some("10"), || {
+            let test = Test::envoke();
+            assert_eq!(test.field, Duration::from_secs(10));
+        });
+    }
+
+    #[test]
+    fn test_load_env_and_validate() {
+        use std::time::Duration;
+
+        fn above_zero(secs: &u64) -> std::result::Result<(), String> {
+            match *secs > 0 {
+                true => Ok(()),
+                false => Err("duration cannot be less than 0".to_string()),
+            }
+        }
+
+        fn to_time(secs: u64) -> Duration {
+            Duration::from_secs(secs)
+        }
+
+        #[derive(Fill)]
+        struct Test {
+            #[fill(env = "TEST_ENV", parse_fn = to_time, arg_type = u64, validate_fn = above_zero)]
             field: Duration,
         }
 
@@ -462,5 +490,14 @@ mod tests {
             let test = Test::envoke();
             assert_eq!(test.field, "value2".to_string())
         });
+    }
+
+    #[test]
+    fn test_secret_wrapper() {
+        #[derive(Fill)]
+        struct Test {
+            #[fill(env, env = "ENV1", env = "ENV2")]
+            field: Secret<String>,
+        }
     }
 }

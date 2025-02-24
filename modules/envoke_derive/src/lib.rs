@@ -3,19 +3,21 @@
 //! Derive macro for `envoke`. Learn more [here!](https://docs.rs/envoke)
 //!
 //! </br>
-//! 
+//!
 //! #### License
-//! 
+//!
 //! <sup>
 //! Licensed under either of <a href="LICENSE-APACHE">Apache License, Version
 //! 2.0</a> or <a href="LICENSE-MIT">MIT license</a> at your option.
 //! </sup>
-//! 
+//!
 //! </br>
-//! 
+//!
 //! <sub>
-//! Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in this crate by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
-//! </sub>
+//! Unless you explicitly state otherwise, any contribution intentionally
+//! submitted for inclusion in this crate by you, as defined in the Apache-2.0
+//! license, shall be dual licensed as above, without any additional terms or
+//! conditions. </sub>
 
 use attr::{ContainerAttributes, FieldAttributes};
 use proc_macro::TokenStream;
@@ -98,7 +100,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
     let expanded = quote! {
         impl #impl_generics envoke::Envoke for #struct_name #ty_generics #where_clause {
             fn try_envoke() -> envoke::Result<#struct_name #ty_generics> {
-                use envoke::Envload;
+                use envoke::{Envloader, FromSingleOpt, FromMap, FromMapOpt, FromSet, FromSetOpt};
 
                 Ok(#struct_name {
                     #(#field_assignments),*
