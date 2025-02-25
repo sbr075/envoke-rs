@@ -1,7 +1,12 @@
+use std::error::Error as StdError;
+
 use thiserror::Error;
 
 #[doc(hidden)]
 pub type Result<T> = std::result::Result<T, Error>;
+
+#[doc(hidden)]
+pub type BoxError = Box<dyn StdError + Send + Sync + 'static>;
 
 #[derive(Debug, Error, strum::EnumIs)]
 pub enum ParseError {
@@ -35,15 +40,19 @@ pub enum RetrieveError {
 
 #[derive(Debug, Error, strum::EnumIs)]
 pub enum Error {
-    #[error("retrieve error occurred: {0}")]
+    #[error("Retrieve error occurred: {0}")]
     RetrieveError(#[from] RetrieveError),
 
-    #[error("parse error occurred: {0}")]
+    #[error("Parse error occurred: {0}")]
     ParseError(#[from] ParseError),
 
-    #[error("failed to convert environment variable `{key}` to expected type")]
+    #[error("Failed to convert environment variable `{key}` to expected type")]
     ConvertError { key: String },
 
-    #[error("validation error occurred: {0}")]
-    ValidationError(String),
+    #[error("Validation error occurred for `{field}`: {err}")]
+    ValidationError {
+        field: String,
+        #[source]
+        err: BoxError,
+    },
 }
