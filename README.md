@@ -408,8 +408,8 @@ If you discover any issues, find missing features that would make the crate bett
 #### License
 
 <sup>
-Licensed under either of <a href="LICENSE-APACHE">Apache License, Version
-2.0</a> or <a href="LICENSE-MIT">MIT license</a> at your option.
+Licensed under either of <a href="https://github.com/sbr075/envoke-rs/blob/main/LICENSE-APACHE">Apache License, Version
+2.0</a> or <a href="https://github.com/sbr075/envoke-rs/blob/main/LICENSE-MIT">MIT license</a> at your option.
 </sup>
 
 </br>
