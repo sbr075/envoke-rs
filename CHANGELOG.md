@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - [**breaking**] Autoset Some() around optional fields ([6b65e81](https://github.com/sbr075/envoke-rs/commit/6b65e81a90dd5f028c573bad64ddbcee77085e5d))
 - [**breaking**] Validate field value last ([09b7826](https://github.com/sbr075/envoke-rs/commit/09b7826ec8ccf16d770837e3c4698ec5aad35d75))
 - Add option for validating before and after parse ([ed6b817](https://github.com/sbr075/envoke-rs/commit/ed6b8174fd4c8a9f717dcef85f6b4c4ba4347956))
+- Dont clone field ident ([03ae45d](https://github.com/sbr075/envoke-rs/commit/03ae45daf2c6d954f6c593d2f5b508bf023cd241))
 
 ### 🐛 Bug Fixes
 
