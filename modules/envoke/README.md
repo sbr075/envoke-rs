@@ -47,7 +47,7 @@ Examples of these features can be found in the [docs](https://docs.rs/envoke)
 Add to your `Cargo.toml`
 ```toml
 [dependencies]
-envoke = "0.1.2"
+envoke = "0.1.3"
 ```
 
 ### Example
@@ -73,7 +73,7 @@ fn to_duration(secs: u64) -> Duration {
 #[derive(Debug, Fill)]
 #[fill(rename_all = "UPPERCASE")]
 struct Environment {
-    #[fill(env, default = 30, validate_fn = above_thirty, parse_fn = to_duration, arg_type = u64)]
+    #[fill(env, default = 30, parse_fn = to_duration, arg_type = u64, validate_fn(before = above_thirty))]
     connect_timeout: Duration,
 }
 
