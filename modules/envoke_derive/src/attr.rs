@@ -194,8 +194,8 @@ impl syn::parse::Parse for Case {
 impl From<&Case> for ConvertCase {
     fn from(value: &Case) -> Self {
         match value {
-            Case::Lower => ConvertCase::Flat,
-            Case::Upper => ConvertCase::UpperFlat,
+            Case::Lower => ConvertCase::Lower,
+            Case::Upper => ConvertCase::Upper,
             Case::Pascal => ConvertCase::Pascal,
             Case::Camel => ConvertCase::Camel,
             Case::Snake => ConvertCase::Snake,
