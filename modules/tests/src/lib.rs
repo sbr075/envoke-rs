@@ -3,7 +3,7 @@
 mod tests {
     use std::{collections::BTreeMap, str::FromStr};
 
-    use envoke::{Envoke, Error, Fill};
+    use envoke::{Envoke, Fill};
     use secrecy::Secret;
 
     #[test]
@@ -293,7 +293,7 @@ mod tests {
         }
 
         impl FromStr for Value {
-            type Err = Error;
+            type Err = envoke::Error;
 
             fn from_str(s: &str) -> Result<Self, Self::Err> {
                 if let Ok(num) = s.parse::<i64>() {

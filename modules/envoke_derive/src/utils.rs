@@ -61,11 +61,11 @@ pub fn default_call(field: &Field) -> proc_macro2::TokenStream {
                 quote! { #path }
             }
             crate::attr::DefaultValue::Lit(lit) => {
-                quote! { 
+                quote! {
                     #lit.try_into().map_err(|_| envoke::Error::ConvertError {
                         field: #ident.to_string(),
                         ty: #ty.to_string()
-                    })? 
+                    })?
                 }
             }
             crate::attr::DefaultValue::Call { path, args } => {
@@ -153,7 +153,7 @@ pub fn env_call(attrs: &ContainerAttributes, field: &Field) -> proc_macro2::Toke
             call = quote! {
                 {
                     let value = #call;
-                    #validate_fn(&value).map_err(|e| Error::ValidationError {
+                    #validate_fn(&value).map_err(|e| envoke::Error::ValidationError {
                         field: stringify!(#ident).to_string(),
                         err: e.into()
                     })?;
