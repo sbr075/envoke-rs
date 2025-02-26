@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 ### 📚 Documentation
 
 - Add examples of validation ([4bc0b8d](https://github.com/sbr075/envoke-rs/commit/4bc0b8da1e8d7c57ff8985df3fdd57f4e7c92812))
+- Fix licence links ([d495f21](https://github.com/sbr075/envoke-rs/commit/d495f21ded2c374a14f263387ab72e43d6c73035))
 
 ### 🧹 Routine Tasks
 
