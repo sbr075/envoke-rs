@@ -217,11 +217,16 @@ mod tests {
 
     #[test]
     fn test_load_env_and_validate_after() {
+        use envoke::{Envoke, Fill};
+
         fn more_than_ten_opt(amount: &Option<u64>) -> std::result::Result<(), String> {
-            match amount.is_some_and(|x| x > 10) {
-                true => Ok(()),
-                false => Err("amount should be more than 10".to_string()),
+            if let Some(amount) = amount {
+                if *amount < 10 {
+                    return Err("amount should be more than 10".to_string());
+                }
             }
+
+            Ok(())
         }
 
         fn more_than_ten(amount: &u64) -> std::result::Result<(), String> {

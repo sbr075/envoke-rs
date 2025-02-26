@@ -15,7 +15,7 @@ A derive macro for loading environment variables into struct fields
 Add to your `Cargo.toml`
 ```toml
 [dependencies]
-envoke = "0.1.2"
+envoke = "0.1.3"
 ```
 
 or run `cargo add envoke`
@@ -82,16 +82,17 @@ This will cause the macro to attempt to fill the field `field` with the value fr
 Field attributes allows you to configure how each field is individually handled when it comes to setting the fields value.
 
 ### Options
-| Attribute   | Default   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| ----------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `env`       | None      | Environment variable name to load the field value from. Can be chained multiple times to allow for fallbacks. The macro follows a first come, first serve basis meaning it attempts to load the variables in the order they are listed. Once an value is found it will try to parse it into the specified type. If it fails it will return an error and wont try the remaining ones in the list. This behavior might change in the future. Optionally, you can supply your own parsing function. See `parse_fn` for more information! |
-| `default`   | None      | Use the default value if the environment variable is not found. Optionally to statically assign a value to the field `env` can be omitted.                                                                                                                                                                                                                                                                                                                                                                                            |
-| `parse_fn`  | None      | Set a custom parsing function for parsing the retrieved value before assigning it to the field. This can be useful when the fields type does not implement the `FromStr` trait. Requires `arg_type` to be set                                                                                                                                                                                                                                                                                                                         |
-| `arg_type`  | None      | Specify the argument type which the `parse_fn` function requires. As I don't know if it is possible to find the type automatically this argument is required such that the environment variable value can be parsed into the expected type first before being set as the argument in the function call.                                                                                                                                                                                                                               |
-| `delimiter` | Comma (,) | Used when parsing environment variable which is a stringified map or set. The delimiter specifies the boundary between values.                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `no_prefix` | False     | Disable adding the global prefix to this environment variable. This will also remove the delimiter that wouldn't normally be between the environment variable and prefix                                                                                                                                                                                                                                                                                                                                                              |
-| `no_suffix` | False     | Disable adding the global suffix to this environment variable. This will also remove the delimiter that wouldn't normally be between the environment variable and suffix                                                                                                                                                                                                                                                                                                                                                              |
-| `nested`    | False     | Indicate that the field is a struct. Required when the field type is another struct                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Attribute     | Default   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `env`         | None      | Environment variable name to load the field value from. Can be chained multiple times to allow for fallbacks. The macro follows a first come, first serve basis meaning it attempts to load the variables in the order they are listed. Once an value is found it will try to parse it into the specified type. If it fails it will return an error and wont try the remaining ones in the list. This behavior might change in the future. Optionally, you can supply your own parsing function. See `parse_fn` for more information! |
+| `default`     | None      | Use the default value if the environment variable is not found. Optionally to statically assign a value to the field `env` can be omitted.                                                                                                                                                                                                                                                                                                                                                                                            |
+| `parse_fn`    | None      | Set a custom parsing function for parsing the retrieved value before assigning it to the field. This can be useful when the fields type does not implement the `FromStr` trait. Requires `arg_type` to be set                                                                                                                                                                                                                                                                                                                         |
+| `arg_type`    | None      | Specify the argument type which the `parse_fn` function requires. As I don't know if it is possible to find the type automatically this argument is required such that the environment variable value can be parsed into the expected type first before being set as the argument in the function call.                                                                                                                                                                                                                               |
+| `validate_fn` | None      | Set a custom validation function for ensuring the loaded value meets expectations. Note `validate_fn` supports both direct assignment and parentheses assignments. See [example](#validating-a-loaded-value)                                                                                                                                                                                                                                                                                                                          |
+| `delimiter`   | Comma (,) | Used when parsing environment variable which is a stringified map or set. The delimiter specifies the boundary between values.                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `no_prefix`   | False     | Disable adding the global prefix to this environment variable. This will also remove the delimiter that wouldn't normally be between the environment variable and prefix                                                                                                                                                                                                                                                                                                                                                              |
+| `no_suffix`   | False     | Disable adding the global suffix to this environment variable. This will also remove the delimiter that wouldn't normally be between the environment variable and suffix                                                                                                                                                                                                                                                                                                                                                              |
+| `nested`      | False     | Indicate that the field is a struct. Required when the field type is another struct                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 </br>
 
@@ -326,6 +327,71 @@ fn main() {
         ],
         || {
             // Fills outer struct field with `60` and inner field with `false`
+            let _ = Example::envoke();
+        },
+    );
+}
+```
+
+</br>
+
+#### Validating a loaded value
+
+Note that if you do not specify where the validation should occur; before or after parsing. It will automatically be called after parsing. Both cases can be seen in the example below
+
+```rust
+use envoke::{Envoke, Fill};
+
+fn less_than_ten_opt(amount: &Option<u64>) -> std::result::Result<(), String> {
+    if let Some(amount) = amount {
+        if *amount > 10 {
+            return Err("amount should be less than 10".to_string());
+        }
+    }
+
+    Ok(())
+}
+
+fn more_than_ten_opt(amount: &Option<u64>) -> std::result::Result<(), String> {
+    if let Some(amount) = amount {
+        if *amount < 10 {
+            return Err("amount should be more than 10".to_string());
+        }
+    }
+
+    Ok(())
+}
+
+fn more_than_ten(amount: &u64) -> std::result::Result<(), String> {
+    match *amount > 10 {
+        true => Ok(()),
+        false => Err("amount should be more than 10".to_string()),
+    }
+}
+
+fn add_ten_opt(amount: Option<u64>) -> Option<u64> {
+    amount.and_then(|x| Some(x + 10))
+}
+
+fn add_ten(amount: u64) -> u64 {
+    amount + 10
+}
+
+#[derive(Fill)]
+struct Example {
+    #[fill(env = "TEST_ENV", parse_fn = add_ten_opt, arg_type = Option<u64>, validate_fn(before = less_than_ten_opt, after = more_than_ten_opt))]
+    field1: Option<u64>,
+
+    #[fill(env = "TEST_ENV", parse_fn = add_ten, arg_type = u64, validate_fn = more_than_ten)]
+    field2: u64,
+}
+
+fn main() {
+    temp_env::with_vars(
+        [
+            ("TEST_ENV", Some("5")),
+        ],
+        || {
             let _ = Example::envoke();
         },
     );
