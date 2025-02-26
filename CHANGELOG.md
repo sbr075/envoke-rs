@@ -19,6 +19,10 @@ All notable changes to this project will be documented in this file.
 
 - Add examples of validation ([4bc0b8d](https://github.com/sbr075/envoke-rs/commit/4bc0b8da1e8d7c57ff8985df3fdd57f4e7c92812))
 
+### 🧹 Routine Tasks
+
+- Remove unused dependency ([3ef7fff](https://github.com/sbr075/envoke-rs/commit/3ef7fff5133080b90183c8e231b179f78d1e8a1f))
+
 ## [0.1.2] - 2025-02-25
 
 ### 🚀 Features
