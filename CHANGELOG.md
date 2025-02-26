@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Use full part for validation error ([208f2c1](https://github.com/sbr075/envoke-rs/commit/208f2c1b167815c10f8d710600d6d70498fe90c3))
+- [**breaking**] Dont parse or validate default values ([b9849f8](https://github.com/sbr075/envoke-rs/commit/b9849f860b871b66ae900895619d0d2cfa24a631))
 
 ### 📚 Documentation
 
@@ -22,6 +23,7 @@ All notable changes to this project will be documented in this file.
 ### 🧹 Routine Tasks
 
 - Remove unused dependency ([3ef7fff](https://github.com/sbr075/envoke-rs/commit/3ef7fff5133080b90183c8e231b179f78d1e8a1f))
+- Bump version to 0.1.4 ([5df5502](https://github.com/sbr075/envoke-rs/commit/5df55024ccd6b9aaf9d6eceb8c444e39d13c9088))
 
 ## [0.1.2] - 2025-02-25
 
