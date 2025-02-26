@@ -189,13 +189,13 @@ mod tests {
     }
 
     #[test]
-    fn test_load_env_and_validate() {
+    fn test_load_env_and_validate_before() {
         use std::time::Duration;
 
         fn above_zero(secs: &u64) -> std::result::Result<(), String> {
             match *secs > 0 {
                 true => Ok(()),
-                false => Err("duration cannot be less than 0".to_string()),
+                false => Err("duration cannot be 0".to_string()),
             }
         }
 
@@ -205,13 +205,85 @@ mod tests {
 
         #[derive(Fill)]
         struct Test {
-            #[fill(env = "TEST_ENV", parse_fn = to_time, arg_type = u64, validate_fn = above_zero)]
+            #[fill(env = "TEST_ENV", parse_fn = to_time, arg_type = u64, validate_fn(before = above_zero))]
             field: Duration,
         }
 
         temp_env::with_var("TEST_ENV", Some("10"), || {
             let test = Test::envoke();
             assert_eq!(test.field, Duration::from_secs(10));
+        });
+    }
+
+    #[test]
+    fn test_load_env_and_validate_after() {
+        fn more_than_ten_opt(amount: &Option<u64>) -> std::result::Result<(), String> {
+            match amount.is_some_and(|x| x > 10) {
+                true => Ok(()),
+                false => Err("amount should be more than 10".to_string()),
+            }
+        }
+
+        fn more_than_ten(amount: &u64) -> std::result::Result<(), String> {
+            match *amount > 10 {
+                true => Ok(()),
+                false => Err("amount should be more than 10".to_string()),
+            }
+        }
+
+        fn add_ten_opt(amount: Option<u64>) -> Option<u64> {
+            amount.and_then(|x| Some(x + 10))
+        }
+
+        fn add_ten(amount: u64) -> u64 {
+            amount + 10
+        }
+
+        #[derive(Fill)]
+        struct Test {
+            #[fill(env = "TEST_ENV", parse_fn = add_ten_opt, arg_type = Option<u64>, validate_fn(after = more_than_ten_opt))]
+            field1: Option<u64>,
+
+            #[fill(env = "TEST_ENV", parse_fn = add_ten, arg_type = u64, validate_fn = more_than_ten)]
+            field2: u64,
+        }
+
+        temp_env::with_var("TEST_ENV", Some("5"), || {
+            let test = Test::envoke();
+            assert_eq!(test.field1, Some(15));
+            assert_eq!(test.field2, 15);
+        });
+    }
+
+    #[test]
+    fn test_load_env_and_validate_before_and_after() {
+        fn less_than_ten(amount: &u64) -> std::result::Result<(), String> {
+            match *amount < 10 {
+                true => Ok(()),
+                false => Err("amount should be less than 10".to_string()),
+            }
+        }
+
+        fn more_than_ten(amount: &u64) -> std::result::Result<(), String> {
+            match *amount > 10 {
+                true => Ok(()),
+                false => Err("amount should be more than 10".to_string()),
+            }
+        }
+
+        fn add_ten(amount: u64) -> u64 {
+            amount + 10
+        }
+
+        #[derive(Fill)]
+        struct Test {
+            #[fill(env = "TEST_ENV", parse_fn = add_ten, arg_type = u64, validate_fn(before = less_than_ten, after = more_than_ten))]
+            field: u64,
+        }
+
+        temp_env::with_var("TEST_ENV", Some("5"), || {
+            let test = Test::envoke();
+            assert_eq!(test.field, 15);
         });
     }
 
