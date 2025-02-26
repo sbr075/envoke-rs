@@ -6,7 +6,7 @@ Designed to be flexible and reduce boilerplate, all to make it easier to manage 
 
 
 ## Useful links
-- [Documenation](https://docs.rs/envoke)
+- [Documentation](https://docs.rs/envoke)
 - [Github](https://github.com/sbr075/envoke-rs)
 - [CHANGELOG](https://github.com/sbr075/envoke-rs/blob/main/CHANGELOG.md)
 
@@ -79,7 +79,7 @@ struct Environment {
 
 fn main() -> anyhow::Result<()> {
     let env =
-        Environment::try_envoke().with_context(|| "An error occured while loading environment");
+        Environment::try_envoke().with_context(|| "An error occurred while loading environment");
 
     ...
 }

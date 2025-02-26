@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use convert_case::Case as ConvertCase;
 use quote::quote;
-use syn::parse::Parse;
+use syn::{meta::ParseNestedMeta, parse::Parse};
 
 #[derive(Debug, strum::EnumString)]
 pub enum Case {
@@ -404,6 +404,55 @@ impl Parse for DefaultValue {
 }
 
 #[derive(Debug, Default)]
+pub struct ValidateFn {
+    /// A function to call after loading the value from the environment variable
+    /// to validate it
+    pub before: Option<syn::Path>,
+
+    /// A function to call after parsing the value to validate the parsed value
+    pub after: Option<syn::Path>,
+}
+
+impl ValidateFn {
+    fn from_nested_meta(meta: &ParseNestedMeta) -> syn::Result<Self> {
+        let mut vfn = Self {
+            before: None,
+            after: None,
+        };
+
+        meta.parse_nested_meta(|meta| {
+            if meta.path.is_ident("before") {
+                let validate_fn = meta.value()?.parse()?;
+                vfn.before = Some(validate_fn);
+                return Ok(());
+            }
+
+            if meta.path.is_ident("after") {
+                let validate_fn = meta.value()?.parse()?;
+                vfn.after = Some(validate_fn);
+                return Ok(());
+            }
+
+            let ident = match meta.path.get_ident() {
+                Some(ident) => ident.to_string(),
+                None => "unknown".to_string(),
+            };
+            Err(meta.error(format!("unknown validate_fn attribute `{ident}`")))
+        })?;
+
+        Ok(vfn)
+    }
+
+    fn from_direct_assignment(meta: &ParseNestedMeta) -> syn::Result<Self> {
+        let validate_fn = meta.value()?.parse()?;
+        Ok(Self {
+            before: None,
+            after: Some(validate_fn),
+        })
+    }
+}
+
+#[derive(Debug, Default)]
 pub struct FieldAttributes {
     /// Environment variables to load the field value from.
     ///
@@ -580,7 +629,7 @@ pub struct FieldAttributes {
     /// ```
     ///
     /// **Default:** `None`
-    pub validate_fn: Option<syn::Path>,
+    pub validate_fn: ValidateFn,
 
     /// Delimiter used when parsing list-type fields (e.g., `Vec<String>`).
     ///
@@ -690,10 +739,6 @@ impl FieldAttributes {
                 // 3. `#[fill(default = default_fn)]` - Uses `default_fn` return value as the
                 //    field value
                 if meta.path.is_ident("default") {
-                    if fa.default.is_some() {
-                        return Err(meta.error("field attribute `default` already set"));
-                    }
-
                     fa.default = match meta.input.peek(syn::Token![=]) {
                         true => Some(meta.value()?.parse()?),
                         false => {
@@ -706,40 +751,41 @@ impl FieldAttributes {
                 }
 
                 if meta.path.is_ident("parse_fn") {
-                    if fa.parse_fn.is_some() {
-                        return Err(meta.error("field attribute `parse_fn` already set"));
-                    }
-
                     let parse_fn = meta.value()?.parse()?;
                     fa.parse_fn = Some(parse_fn);
                     return Ok(());
                 }
 
                 if meta.path.is_ident("arg_type") {
-                    if fa.arg_type.is_some() {
-                        return Err(meta.error("field attribute `arg_type` already set"));
-                    }
-
                     let arg_type = meta.value()?.parse()?;
                     fa.arg_type = Some(arg_type);
                     return Ok(());
                 }
 
                 if meta.path.is_ident("validate_fn") {
-                    if fa.validate_fn.is_some() {
-                        return Err(meta.error("field attribute `validate_fn` already set"));
+                    // Check if we can parse validate_fn as a nested meta aka.
+                    // #[fill(validate_fn(before = ..., after = ...))]
+                    if let Ok(vfn) = ValidateFn::from_nested_meta(&meta) {
+                        fa.validate_fn = vfn;
+                        return Ok(());
                     }
 
-                    let validate_fn = meta.value()?.parse()?;
-                    fa.validate_fn = Some(validate_fn);
-                    return Ok(());
+                    // If first parse fail, try to parse as if its a direct assignment aka.
+                    // #[fill(validate_fn = ...)]
+                    match ValidateFn::from_direct_assignment(&meta) {
+                        Ok(vfn) => {
+                            fa.validate_fn = vfn;
+                            return Ok(());
+                        }
+                        Err(_) => {
+                            return Err(
+                                meta.error("expected either direct assignment or parentheses")
+                            )
+                        }
+                    }
                 }
 
                 if meta.path.is_ident("delimiter") {
-                    if fa.delimiter.is_some() {
-                        return Err(meta.error("field attribute `delimiter` already set"));
-                    }
-
                     let str: syn::LitStr = meta.value()?.parse()?;
                     let delimiter = str.value();
                     if delimiter == "=" {
@@ -757,28 +803,16 @@ impl FieldAttributes {
                 }
 
                 if meta.path.is_ident("no_prefix") {
-                    if fa.no_prefix {
-                        return Err(meta.error("field attribute `no_prefix` already set"));
-                    }
-
                     fa.no_prefix = true;
                     return Ok(());
                 }
 
                 if meta.path.is_ident("no_suffix") {
-                    if fa.no_suffix {
-                        return Err(meta.error("field attribute `no_suffix` already set"));
-                    }
-
                     fa.no_suffix = true;
                     return Ok(());
                 }
 
                 if meta.path.is_ident("nested") {
-                    if fa.nested {
-                        return Err(meta.error("field attribute `nested` already set"));
-                    }
-
                     fa.nested = true;
                     return Ok(());
                 }

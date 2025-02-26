@@ -82,10 +82,11 @@ pub fn default_call(field: &Field) -> proc_macro2::TokenStream {
 
     call
 }
-
 pub fn env_call(attrs: &ContainerAttributes, field: &Field) -> proc_macro2::TokenStream {
     if let Some(envs) = &field.attrs.envs {
         let ident = &field.ident;
+        let ident = quote! { #ident }.to_string();
+
         let ty = match (&field.attrs.parse_fn.is_some(), &field.attrs.arg_type) {
             (true, None) => {
                 panic!("field attribute `arg_type` is required if `parse_fn` is specified")
@@ -149,16 +150,29 @@ pub fn env_call(attrs: &ContainerAttributes, field: &Field) -> proc_macro2::Toke
             }
         };
 
-        if let Some(parse_fn) = &field.attrs.parse_fn {
-            call = quote! { #parse_fn(#call) }
-        }
-
-        if let Some(validate_fn) = &field.attrs.validate_fn {
+        if let Some(validate_fn) = &field.attrs.validate_fn.before {
             call = quote! {
                 {
                     let value = #call;
                     #validate_fn(&value).map_err(|e| envoke::Error::ValidationError {
-                        field: stringify!(#ident).to_string(),
+                        field: #ident.to_string(),
+                        err: e.into()
+                    })?;
+                    value
+                }
+            };
+        }
+
+        if let Some(parse_fn) = &field.attrs.parse_fn {
+            call = quote! { #parse_fn(#call) }
+        }
+
+        if let Some(validate_fn) = &field.attrs.validate_fn.after {
+            call = quote! {
+                {
+                    let value = #call;
+                    #validate_fn(&value).map_err(|e| envoke::Error::ValidationError {
+                        field: #ident.to_string(),
                         err: e.into()
                     })?;
                     value
