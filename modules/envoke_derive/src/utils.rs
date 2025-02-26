@@ -149,6 +149,10 @@ pub fn env_call(attrs: &ContainerAttributes, field: &Field) -> proc_macro2::Toke
             }
         };
 
+        if let Some(parse_fn) = &field.attrs.parse_fn {
+            call = quote! { #parse_fn(#call) }
+        }
+
         if let Some(validate_fn) = &field.attrs.validate_fn {
             call = quote! {
                 {
@@ -160,10 +164,6 @@ pub fn env_call(attrs: &ContainerAttributes, field: &Field) -> proc_macro2::Toke
                     value
                 }
             };
-        }
-
-        if let Some(parse_fn) = &field.attrs.parse_fn {
-            call = quote! { #parse_fn(#call) }
         }
 
         call
