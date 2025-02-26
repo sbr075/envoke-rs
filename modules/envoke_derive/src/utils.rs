@@ -46,7 +46,13 @@ fn get_inner_types(ty: &Type) -> Option<Vec<&Type>> {
 }
 
 pub fn default_call(field: &Field) -> proc_macro2::TokenStream {
-    match &field.attrs.default {
+    let ident = &field.ident;
+    let ident = quote! { #ident }.to_string();
+
+    let ty = &field.ty;
+    let ty = quote! { #ty }.to_string();
+
+    let mut call = match &field.attrs.default {
         Some(default) => match default {
             crate::attr::DefaultValue::Type(ty) => {
                 quote! { <#ty>::default() }
@@ -55,14 +61,26 @@ pub fn default_call(field: &Field) -> proc_macro2::TokenStream {
                 quote! { #path }
             }
             crate::attr::DefaultValue::Lit(lit) => {
-                quote! { #lit }
+                quote! { 
+                    #lit.try_into().map_err(|_| envoke::Error::ConvertError {
+                        field: #ident.to_string(),
+                        ty: #ty.to_string()
+                    })? 
+                }
             }
             crate::attr::DefaultValue::Call { path, args } => {
                 quote! { #path(#(#args),*) }
             }
         },
         None => quote! { panic!("fatal error occurred") },
+    };
+
+    let is_optional = is_optional(&field.ty);
+    if is_optional {
+        call = quote! { Some(#call) }
     }
+
+    call
 }
 
 pub fn env_call(attrs: &ContainerAttributes, field: &Field) -> proc_macro2::TokenStream {

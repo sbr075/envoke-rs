@@ -46,8 +46,8 @@ pub enum Error {
     #[error("Parse error occurred: {0}")]
     ParseError(#[from] ParseError),
 
-    #[error("Failed to convert environment variable `{key}` to expected type")]
-    ConvertError { key: String },
+    #[error("Failed to convert field `{field}` to expected type `{ty}`")]
+    ConvertError { field: String, ty: String },
 
     #[error("Validation error occurred for `{field}`: {err}")]
     ValidationError {

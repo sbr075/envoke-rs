@@ -15,7 +15,8 @@ edition.workspace = true
 
 [dependencies]
 anyhow = "1.0.96"
-envoke_derive = "0.1.2"
+#envoke_derive = "0.1.2"
+envoke_derive = { path = "../envoke_derive" }
 strum = { version = "0.27.1", features = ["derive"] }
 thiserror = "2.0.11"
 
