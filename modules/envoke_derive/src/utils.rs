@@ -82,11 +82,43 @@ pub fn default_call(field: &Field) -> proc_macro2::TokenStream {
 
     call
 }
+
+fn process_call(field: &Field) -> proc_macro2::TokenStream {
+    let ident = &field.ident;
+    let ident = quote! { #ident }.to_string();
+    let mut call = quote! {};
+
+    if let Some(validate_fn) = &field.attrs.validate_fn.before {
+        call = quote! {
+            #validate_fn(&value).map_err(|e| envoke::Error::ValidationError {
+                field: #ident.to_string(),
+                err: e.into()
+            })?;
+        };
+    }
+
+    if let Some(parse_fn) = &field.attrs.parse_fn {
+        call = quote! {
+            #call
+            let value = #parse_fn(value);
+        }
+    }
+
+    if let Some(validate_fn) = &field.attrs.validate_fn.after {
+        call = quote! {
+            #call
+            #validate_fn(&value).map_err(|e| envoke::Error::ValidationError {
+                field: #ident.to_string(),
+                err: e.into()
+            })?;
+        };
+    }
+
+    call
+}
+
 pub fn env_call(attrs: &ContainerAttributes, field: &Field) -> proc_macro2::TokenStream {
     if let Some(envs) = &field.attrs.envs {
-        let ident = &field.ident;
-        let ident = quote! { #ident }.to_string();
-
         let ty = match (&field.attrs.parse_fn.is_some(), &field.attrs.arg_type) {
             (true, None) => {
                 panic!("field attribute `arg_type` is required if `parse_fn` is specified")
@@ -131,13 +163,17 @@ pub fn env_call(attrs: &ContainerAttributes, field: &Field) -> proc_macro2::Toke
             }
         };
 
-        let mut call = match field.attrs.default.is_some() {
+        let process_call = process_call(field);
+        match field.attrs.default.is_some() {
             true => {
                 let default_call = default_call(field);
                 quote! {
                     {
                         match #base_call {
-                            Ok(value) => value,
+                            Ok(value) => {
+                                #process_call
+                                value
+                            },
                             Err(_) => #default_call,
                         }
                     }
@@ -145,42 +181,14 @@ pub fn env_call(attrs: &ContainerAttributes, field: &Field) -> proc_macro2::Toke
             }
             false => {
                 quote! {
-                    { #base_call? }
+                    {
+                        let value = #base_call?;
+                        #process_call
+                        value
+                    }
                 }
             }
-        };
-
-        if let Some(validate_fn) = &field.attrs.validate_fn.before {
-            call = quote! {
-                {
-                    let value = #call;
-                    #validate_fn(&value).map_err(|e| envoke::Error::ValidationError {
-                        field: #ident.to_string(),
-                        err: e.into()
-                    })?;
-                    value
-                }
-            };
         }
-
-        if let Some(parse_fn) = &field.attrs.parse_fn {
-            call = quote! { #parse_fn(#call) }
-        }
-
-        if let Some(validate_fn) = &field.attrs.validate_fn.after {
-            call = quote! {
-                {
-                    let value = #call;
-                    #validate_fn(&value).map_err(|e| envoke::Error::ValidationError {
-                        field: #ident.to_string(),
-                        err: e.into()
-                    })?;
-                    value
-                }
-            };
-        }
-
-        call
     } else {
         quote! {
             panic!("fatal error occurred")

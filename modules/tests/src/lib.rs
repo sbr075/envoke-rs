@@ -1,10 +1,48 @@
 #[cfg(test)]
 #[allow(dead_code)]
 mod tests {
-    use std::{collections::BTreeMap, str::FromStr};
+    use std::{collections::BTreeMap, str::FromStr, time::Duration};
 
     use envoke::{Envoke, Fill};
     use secrecy::Secret;
+
+    #[test]
+    fn test_readme_example() {
+        fn above_thirty(secs: &u64) -> anyhow::Result<()> {
+            if *secs < 30 {
+                anyhow::bail!(
+                    "connect timeout cannot be less than 30 seconds, found {secs} second(s)"
+                )
+            }
+
+            Ok(())
+        }
+
+        fn to_duration(secs: u64) -> Duration {
+            Duration::from_secs(secs)
+        }
+
+        #[derive(Debug, Fill)]
+        #[fill(rename_all = "SCREAMING_SNAKE_CASE")]
+        struct Environment {
+            #[fill(env, default = Duration::from_secs(30))]
+            #[fill(parse_fn = to_duration, arg_type = u64, validate_fn(before = above_thirty))]
+            connect_timeout: Duration,
+        }
+
+        let test = Environment::envoke();
+        assert_eq!(test.connect_timeout, Duration::from_secs(30));
+
+        temp_env::with_var("CONNECT_TIMEOUT", Some("29"), || {
+            let test = Environment::try_envoke();
+            assert!(test.is_err())
+        });
+
+        temp_env::with_var("CONNECT_TIMEOUT", Some("31"), || {
+            let test = Environment::envoke();
+            assert_eq!(test.connect_timeout, Duration::from_secs(31))
+        });
+    }
 
     #[test]
     fn test_partial_initialization() {
@@ -576,5 +614,38 @@ mod tests {
             #[fill(env, env = "ENV1", env = "ENV2")]
             field: Secret<String>,
         }
+    }
+
+    #[test]
+    fn test_default_not_validated_or_parsed() {
+        fn more_than_ten(amount: &u64) -> std::result::Result<(), String> {
+            match *amount > 10 {
+                true => Ok(()),
+                false => Err("amount should be more than 10".to_string()),
+            }
+        }
+
+        fn add_ten(amount: u64) -> u64 {
+            amount + 10
+        }
+
+        #[derive(Fill)]
+        struct Test {
+            #[fill(env, default, parse_fn = add_ten, arg_type = u64, validate_fn = more_than_ten)]
+            field: u64,
+        }
+
+        let test = Test::envoke();
+        assert_eq!(test.field, 0);
+
+        temp_env::with_var("field", Some("0"), || {
+            let test = Test::try_envoke();
+            assert!(test.is_err());
+        });
+
+        temp_env::with_var("field", Some("1"), || {
+            let test = Test::envoke();
+            assert_eq!(test.field, 11);
+        });
     }
 }

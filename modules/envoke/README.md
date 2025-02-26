@@ -26,6 +26,7 @@ Examples of these features can be found in the [docs](https://docs.rs/envoke)
 - **Configurable Default Values:**  
   - Support default values as field type defaults, static values, or function return values.  
   - Defaults can be used independently or as a fallback if no environment variable is found.  
+  - Note that defaults are not ran through validation or parsing functions.
 
 - **Custom Parsing Support:**  
   - Transform environment variable values before field assignment.  
@@ -71,9 +72,10 @@ fn to_duration(secs: u64) -> Duration {
 }
 
 #[derive(Debug, Fill)]
-#[fill(rename_all = "UPPERCASE")]
+#[fill(rename_all = "SCREAMING_SNAKE_CASE")]
 struct Environment {
-    #[fill(env, default = 30, parse_fn = to_duration, arg_type = u64, validate_fn(before = above_thirty))]
+    #[fill(env, default = Duration::from_secs(30))]
+    #[fill(parse_fn = to_duration, arg_type = u64, validate_fn(before = above_thirty))]
     connect_timeout: Duration,
 }
 

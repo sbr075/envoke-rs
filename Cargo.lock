@@ -3,6 +3,12 @@
 version = 4
 
 [[package]]
+name = "anyhow"
+version = "1.0.96"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6b964d184e89d9b6b67dd2715bc8e74cf3107fb2b529990c90cf517326150bf4"
+
+[[package]]
 name = "autocfg"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -33,7 +39,7 @@ dependencies = [
 name = "envoke"
 version = "0.1.3"
 dependencies = [
- "envoke_derive 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "envoke_derive",
  "strum",
  "temp-env",
  "thiserror",
@@ -42,19 +48,6 @@ dependencies = [
 [[package]]
 name = "envoke_derive"
 version = "0.1.3"
-dependencies = [
- "convert_case",
- "proc-macro2",
- "quote",
- "strum",
- "syn",
-]
-
-[[package]]
-name = "envoke_derive"
-version = "0.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "872cf6f2186cbea69f2f61cdeff730dbcaaea742b4b04e878fbb8359e69cb890"
 dependencies = [
  "convert_case",
  "proc-macro2",
@@ -228,6 +221,7 @@ dependencies = [
 name = "tests"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "envoke",
  "secrecy",
  "serde",

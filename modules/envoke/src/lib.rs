@@ -190,7 +190,8 @@
 //!
 //! </br>
 //!
-//! Default fallbacks can also be added, or used alone
+//! Default fallbacks can also be added, or used alone. Note that default values
+//! are not ran through validation or parsing functions
 //!
 //! ```rust
 //! use envoke::Envoke;
