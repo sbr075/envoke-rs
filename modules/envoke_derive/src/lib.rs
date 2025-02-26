@@ -40,11 +40,10 @@ impl TryFrom<syn::Field> for Field {
     type Error = syn::Error;
 
     fn try_from(field: syn::Field) -> Result<Self, Self::Error> {
-        let ident = &field.ident;
         let attrs = FieldAttributes::parse_attrs(&field, &field.attrs)?;
 
         Ok(Self {
-            ident: ident.clone(),
+            ident: field.ident,
             ty: field.ty,
             attrs,
         })
