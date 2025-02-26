@@ -60,7 +60,7 @@ mod tests {
     fn test_load_env_multiple_names() {
         #[derive(Fill)]
         struct Test {
-            #[fill(env, env = "ENV1", env = "ENV2")]
+            #[fill(env, env = "ENV1", env = "ENV2", default = "test")]
             field: Option<String>,
         }
 
