@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 
 - Use full part for validation error ([208f2c1](https://github.com/sbr075/envoke-rs/commit/208f2c1b167815c10f8d710600d6d70498fe90c3))
 - [**breaking**] Dont parse or validate default values ([b9849f8](https://github.com/sbr075/envoke-rs/commit/b9849f860b871b66ae900895619d0d2cfa24a631))
+- Switch back to old naming case ([65ebac5](https://github.com/sbr075/envoke-rs/commit/65ebac5247d6bc862b52d12779a6f97d81289b47))
 
 ### 📚 Documentation
 
