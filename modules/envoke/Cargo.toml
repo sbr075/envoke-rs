@@ -1,6 +1,6 @@
 [package]
 name = "envoke"
-version = "0.1.5"
+version = "0.1.6"
 description = "A simple and ergonomic way to load environment variables into struct fields."
 categories = ["config", "parsing"]
 keywords = [

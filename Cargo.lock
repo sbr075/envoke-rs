@@ -45,7 +45,7 @@ dependencies = [
 
 [[package]]
 name = "envoke"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "envoke_derive 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "strum",

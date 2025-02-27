@@ -15,7 +15,7 @@ A derive macro for loading environment variables into struct fields
 Add to your `Cargo.toml`
 ```toml
 [dependencies]
-envoke = "0.1.5"
+envoke = "0.1.6"
 ```
 
 or run `cargo add envoke`
