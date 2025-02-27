@@ -4,7 +4,6 @@ Envoke is a simple and ergonomic way to load environment variables into struct f
 
 Designed to be flexible and reduce boilerplate, all to make it easier to manage environment variables in your application.
 
-
 ## Useful links
 - [Documentation](https://docs.rs/envoke)
 - [Github](https://github.com/sbr075/envoke-rs)

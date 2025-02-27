@@ -163,7 +163,7 @@ where
     V: FromStr,
 {
     fn load_once(envs: &[impl AsRef<str>], _delim: &str) -> Result<Option<V>> {
-        load_once(envs).map(Some)
+        Ok(load_once(envs).ok())
     }
 }
 

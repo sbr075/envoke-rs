@@ -1,7 +1,11 @@
 #[cfg(test)]
 #[allow(dead_code)]
 mod tests {
-    use std::{collections::BTreeMap, str::FromStr, time::Duration};
+    use std::{
+        collections::{BTreeMap, HashMap},
+        str::FromStr,
+        time::Duration,
+    };
 
     use envoke::{Envoke, Fill};
     use secrecy::Secret;
@@ -106,6 +110,29 @@ mod tests {
             let test = Test::envoke();
             assert_eq!(test.field, Some("value".to_string()))
         });
+    }
+
+    #[test]
+    fn test_load_env_optional_not_found() {
+        fn default_map() -> HashMap<String, i32> {
+            HashMap::from([("Hello".to_string(), 1), ("World".to_string(), 2)])
+        }
+        #[derive(Fill)]
+        struct Test {
+            #[fill(env, env = "ENV1", env = "ENV2", default)]
+            field: Option<String>,
+
+            #[fill(default = Vec::from([1]))]
+            field2: Option<Vec<i32>>,
+
+            #[fill(default = default_map())]
+            field3: Option<HashMap<String, i32>>,
+        }
+
+        let test = Test::envoke();
+        assert_eq!(test.field, None);
+        assert_eq!(test.field2, Some(Vec::from([1])));
+        assert_eq!(test.field3, Some(default_map()));
     }
 
     #[test]
