@@ -20,8 +20,11 @@ envoke = "0.1.4"
 
 or run `cargo add envoke`
 
-## Documentation
-- [Envoke](https://docs.rs/envoke)
+## Useful links
+- [Documentation](https://docs.rs/envoke)
+- [Github](https://github.com/sbr075/envoke-rs)
+- [Examples](https://github.com/sbr075/envoke-rs/blob/main/examples/)
+- [CHANGELOG](https://github.com/sbr075/envoke-rs/blob/main/CHANGELOG.md)
 
 </br>
 

@@ -1,0 +1,11 @@
+[package]
+name = "loading_map_and_set_envs"
+version = "0.1.0"
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+envoke = { path = "../../modules/envoke" }
+strum = { version = "0.27.1", features = ["derive"] }
+temp-env = "0.3.6"

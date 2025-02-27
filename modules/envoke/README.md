@@ -7,6 +7,7 @@ Designed to be flexible and reduce boilerplate, all to make it easier to manage 
 ## Useful links
 - [Documentation](https://docs.rs/envoke)
 - [Github](https://github.com/sbr075/envoke-rs)
+- [Examples](https://github.com/sbr075/envoke-rs/blob/main/examples/)
 - [CHANGELOG](https://github.com/sbr075/envoke-rs/blob/main/CHANGELOG.md)
 
 ## Features
