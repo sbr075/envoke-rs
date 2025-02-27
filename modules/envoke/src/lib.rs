@@ -297,12 +297,17 @@
 
 mod errors;
 mod load;
+mod load_opt;
+mod utils;
 
 #[doc(hidden)]
 pub use errors::{Error, ParseError, Result, RetrieveError};
 
 #[doc(hidden)]
-pub use load::{Envloader, FromMap, FromMapOpt, FromSet, FromSetOpt, FromSingleOpt};
+pub use load::{Envloader, FromMap, FromSet};
+
+#[doc(hidden)]
+pub use load_opt::{FromMapOpt, FromSetOpt, OptEnvloader};
 
 #[doc(hidden)]
 pub use envoke_derive::Fill;
