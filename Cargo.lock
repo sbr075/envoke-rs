@@ -47,7 +47,7 @@ dependencies = [
 name = "envoke"
 version = "0.1.5"
 dependencies = [
- "envoke_derive",
+ "envoke_derive 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "strum",
  "temp-env",
  "thiserror",
@@ -56,6 +56,19 @@ dependencies = [
 [[package]]
 name = "envoke_derive"
 version = "0.1.5"
+dependencies = [
+ "convert_case",
+ "proc-macro2",
+ "quote",
+ "strum",
+ "syn",
+]
+
+[[package]]
+name = "envoke_derive"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0a29ac95df08034c7e6f846a77fa253a76c9834e5ac122dcd5b1166dbb5d0d2d"
 dependencies = [
  "convert_case",
  "proc-macro2",

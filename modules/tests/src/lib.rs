@@ -593,6 +593,44 @@ mod tests {
     }
 
     #[test]
+    fn test_load_env_opt_map_and_set() {
+        use std::collections::HashSet;
+
+        #[derive(Debug, Fill)]
+        struct Test {
+            #[fill(env)]
+            map: Option<HashMap<String, String>>,
+
+            #[fill(env)]
+            set: Option<HashSet<i32>>,
+
+            #[fill(env)]
+            vec: Option<Vec<bool>>,
+        }
+
+        Test::envoke();
+    }
+
+    #[test]
+    fn test_load_env_default_map_and_set() {
+        use std::collections::HashSet;
+
+        #[derive(Debug, Fill)]
+        struct Test {
+            #[fill(env, default)]
+            map: HashMap<String, String>,
+
+            #[fill(env, default)]
+            set: HashSet<i32>,
+
+            #[fill(env, default)]
+            vec: Vec<bool>,
+        }
+
+        Test::envoke();
+    }
+
+    #[test]
     fn test_load_env_rename_env() {
         #[derive(Fill)]
         #[fill(rename_all = "SCREAMING_SNAKE_CASE")]
