@@ -1,8 +1,10 @@
 //! # envoke
 //!
-//! Useful links
-//! * [Github](https://github.com/sbr075/envoke-rs)
-//! * [CHANGELOG](https://github.com/sbr075/envoke-rs/blob/main/CHANGELOG.md)
+//! ## Useful links
+//! - [Documentation](https://docs.rs/envoke)
+//! - [Github](https://github.com/sbr075/envoke-rs)
+//! - [Examples](https://github.com/sbr075/envoke-rs/blob/main/examples/)
+//! - [CHANGELOG](https://github.com/sbr075/envoke-rs/blob/main/CHANGELOG.md)
 //!
 //! ## Attributes
 //!
