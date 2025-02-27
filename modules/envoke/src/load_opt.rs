@@ -20,7 +20,10 @@ where
     M: FromIterator<(K, V)>,
 {
     fn load_once(envs: &[impl AsRef<str>], delim: &str) -> Result<Option<M>> {
-        let value: String = load_once(envs)?;
+        let value: String = match load_once(envs) {
+            Ok(value) => value,
+            Err(_) => return Ok(None),
+        };
         parse_map(&value, delim).map(Some).map_err(|e| e.into())
     }
 }
@@ -35,7 +38,10 @@ where
     S: FromIterator<V>,
 {
     fn load_once(envs: &[impl AsRef<str>], delim: &str) -> Result<Option<S>> {
-        let value: String = load_once(envs)?;
+        let value: String = match load_once(envs) {
+            Ok(value) => value,
+            Err(_) => return Ok(None),
+        };
         parse_set(&value, delim).map(Some).map_err(|e| e.into())
     }
 }
