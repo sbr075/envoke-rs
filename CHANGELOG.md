@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 
 - Add examples ([234e045](https://github.com/sbr075/envoke-rs/commit/234e045de5cc9c47067ef727a321b932c978caa0))
 - Bump version to 0.1.5 ([5de0a72](https://github.com/sbr075/envoke-rs/commit/5de0a7242e343449a04203cf1b18774da9ea9bc6))
+- Bump version to 0.1.6 ([507562c](https://github.com/sbr075/envoke-rs/commit/507562c0e7155bfe73db6a48f788fe3757c7d515))
 
 ## [0.1.4] - 2025-02-26
 
