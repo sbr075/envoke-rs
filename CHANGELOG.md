@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 - Dont return error if env not found for opt ([4e3deac](https://github.com/sbr075/envoke-rs/commit/4e3deacfd55ea299f3a131b9b05dd6a7af930dc3))
 - Allow set/map also to be optional ([fb852c9](https://github.com/sbr075/envoke-rs/commit/fb852c94a1ddcd4151ff23499254674fcab88527))
+- Dont error if env fails for opts ([81a0459](https://github.com/sbr075/envoke-rs/commit/81a0459e1515260032643522411c382bb7b44adb))
 
 ### 🧹 Routine Tasks
 
