@@ -52,35 +52,44 @@ pub fn default_call(field: &Field) -> proc_macro2::TokenStream {
     let ty = &field.ty;
     let ty = quote! { #ty }.to_string();
 
-    let mut call = match &field.attrs.default {
+    let is_optional = is_optional(&field.ty);
+    match &field.attrs.default {
         Some(default) => match default {
             crate::attr::DefaultValue::Type(ty) => {
                 quote! { <#ty>::default() }
             }
             crate::attr::DefaultValue::Path(path) => {
-                quote! { #path }
+                let mut call = quote! { #path };
+                if is_optional {
+                    call = quote! { Some(#call) }
+                }
+
+                call
             }
             crate::attr::DefaultValue::Lit(lit) => {
-                quote! {
+                let mut call = quote! {
                     #lit.try_into().map_err(|_| envoke::Error::ConvertError {
                         field: #ident.to_string(),
                         ty: #ty.to_string()
                     })?
+                };
+                if is_optional {
+                    call = quote! { Some(#call) }
                 }
+
+                call
             }
             crate::attr::DefaultValue::Call { path, args } => {
-                quote! { #path(#(#args),*) }
+                let mut call = quote! { #path(#(#args),*) };
+                if is_optional {
+                    call = quote! { Some(#call) }
+                }
+
+                call
             }
         },
         None => quote! { panic!("fatal error occurred") },
-    };
-
-    let is_optional = is_optional(&field.ty);
-    if is_optional {
-        call = quote! { Some(#call) }
     }
-
-    call
 }
 
 fn process_call(field: &Field) -> proc_macro2::TokenStream {
