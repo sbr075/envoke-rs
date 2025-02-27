@@ -3,14 +3,6 @@
 version = 4
 
 [[package]]
-name = "advanced"
-version = "0.1.0"
-dependencies = [
- "envoke",
- "temp-env",
-]
-
-[[package]]
 name = "anyhow"
 version = "1.0.96"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -53,7 +45,7 @@ dependencies = [
 
 [[package]]
 name = "envoke"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "envoke_derive",
  "strum",
@@ -63,7 +55,7 @@ dependencies = [
 
 [[package]]
 name = "envoke_derive"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "convert_case",
  "proc-macro2",
