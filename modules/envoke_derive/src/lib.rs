@@ -99,7 +99,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
     let expanded = quote! {
         impl #impl_generics envoke::Envoke for #struct_name #ty_generics #where_clause {
             fn try_envoke() -> envoke::Result<#struct_name #ty_generics> {
-                use envoke::{Envloader, FromSingleOpt, FromMap, FromMapOpt, FromSet, FromSetOpt};
+                use envoke::{Envloader, OptEnvloader, FromMap, FromMapOpt, FromSet, FromSetOpt};
 
                 Ok(#struct_name {
                     #(#field_assignments),*

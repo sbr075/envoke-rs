@@ -1,6 +1,6 @@
 use convert_case::Casing;
 use quote::quote;
-use syn::{Data, Fields, FieldsNamed, GenericArgument, PathArguments, Type};
+use syn::{Data, Fields, FieldsNamed, Type};
 
 use crate::{attr::ContainerAttributes, Field};
 
@@ -18,30 +18,6 @@ pub fn is_optional(ty: &Type) -> bool {
     match ty {
         Type::Path(path) => path.path.segments[0].ident == "Option",
         _ => false,
-    }
-}
-
-fn get_inner_types(ty: &Type) -> Option<Vec<&Type>> {
-    match ty {
-        Type::Path(path) => match path.path.segments.get(0) {
-            Some(segment) => match &segment.arguments {
-                PathArguments::AngleBracketed(args) => {
-                    let inners = args
-                        .args
-                        .iter()
-                        .filter_map(|e| match e {
-                            GenericArgument::Type(ty) => Some(ty),
-                            _ => None,
-                        })
-                        .collect();
-
-                    Some(inners)
-                }
-                _ => None,
-            },
-            None => None,
-        },
-        _ => None,
     }
 }
 
@@ -164,8 +140,7 @@ pub fn env_call(attrs: &ContainerAttributes, field: &Field) -> proc_macro2::Toke
         let is_optional = is_optional(ty);
         let base_call = match is_optional {
             true => {
-                let inner_types = get_inner_types(ty).unwrap();
-                quote! { <envoke::Envloader<#ty> as FromSingleOpt<(#(#inner_types),*)>>::load_once(&[#(#envs),*], #delim) }
+                quote! { envoke::OptEnvloader::<#ty>::load_once(&[#(#envs),*], #delim) }
             }
             false => {
                 quote! { envoke::Envloader::<#ty>::load_once(&[#(#envs),*], #delim) }
