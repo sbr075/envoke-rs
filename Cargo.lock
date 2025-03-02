@@ -47,7 +47,7 @@ dependencies = [
 name = "envoke"
 version = "0.1.6"
 dependencies = [
- "envoke_derive 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "envoke_derive",
  "strum",
  "temp-env",
  "thiserror",
@@ -60,21 +60,10 @@ dependencies = [
  "convert_case",
  "proc-macro2",
  "quote",
+ "strsim",
  "strum",
  "syn",
-]
-
-[[package]]
-name = "envoke_derive"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a29ac95df08034c7e6f846a77fa253a76c9834e5ac122dcd5b1166dbb5d0d2d"
-dependencies = [
- "convert_case",
- "proc-macro2",
- "quote",
- "strum",
- "syn",
+ "thiserror",
 ]
 
 [[package]]
@@ -236,6 +225,12 @@ name = "smallvec"
 version = "1.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7fcf8323ef1faaee30a44a340193b1ac6814fd9b7b4e88e9d4519a3e4abe1cfd"
+
+[[package]]
+name = "strsim"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
 name = "strum"

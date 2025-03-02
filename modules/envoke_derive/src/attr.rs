@@ -2,9 +2,12 @@ use std::str::FromStr;
 
 use convert_case::Case as ConvertCase;
 use quote::quote;
-use syn::{meta::ParseNestedMeta, parse::Parse};
+use strum::VariantNames;
+use syn::spanned::Spanned;
 
-#[derive(Debug, strum::EnumString)]
+use crate::errors::Error;
+
+#[derive(Debug, strum::EnumString, strum::VariantNames)]
 pub enum Case {
     /// Converts all characters to lowercase and removes binding characters.
     ///
@@ -181,21 +184,37 @@ pub enum Case {
     ScreamingKebab,
 }
 
+fn find_closest_match(input: &str, variants: &'static [&'static str]) -> Option<&'static str> {
+    for variant in variants {
+        let distance = strsim::levenshtein(input, &variant);
+        if distance <= 5 {
+            return Some(variant);
+        }
+    }
+
+    None
+}
+
 impl syn::parse::Parse for Case {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let c: syn::LitStr = input.parse()?;
-        let case =
-            Case::from_str(&c.value()).map_err(|_| input.error("unknown naming convention"))?;
+        let input: syn::LitStr = input.parse()?;
+        let value = input.value();
+        Case::from_str(&value).map_err(|_| {
+            let mut message = format!("unexpected naming convention `{value}`");
+            if let Some(closest_match) = find_closest_match(&value, Case::VARIANTS) {
+                message = format!("{message}, did you mean `{closest_match}`?")
+            }
 
-        Ok(case)
+            syn::Error::new_spanned(input, message)
+        })
     }
 }
 
 impl From<&Case> for ConvertCase {
     fn from(value: &Case) -> Self {
         match value {
-            Case::Lower => ConvertCase::Flat,
-            Case::Upper => ConvertCase::UpperFlat,
+            Case::Lower => ConvertCase::Lower,
+            Case::Upper => ConvertCase::Upper,
             Case::Pascal => ConvertCase::Pascal,
             Case::Camel => ConvertCase::Camel,
             Case::Snake => ConvertCase::Snake,
@@ -295,16 +314,60 @@ pub struct ContainerAttributes {
 }
 
 impl ContainerAttributes {
+    const VARIANTS: &[&str] = &["prefix", "suffix", "delimiter", "rename_all"];
+
     pub fn get_prefix(&self) -> &str {
         self.prefix.as_deref().unwrap_or_default()
+    }
+
+    fn set_prefix(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
+        if self.prefix.is_some() {
+            return Err(Error::duplicate_attribute("prefix").to_syn_error(meta.path.span().span()));
+        }
+
+        let prefix: syn::LitStr = meta.value()?.parse()?;
+        self.prefix = Some(prefix.value());
+        Ok(())
     }
 
     pub fn get_suffix(&self) -> &str {
         self.suffix.as_deref().unwrap_or_default()
     }
 
+    fn set_suffix(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
+        if self.suffix.is_some() {
+            return Err(Error::duplicate_attribute("suffix").to_syn_error(meta.path.span().span()));
+        }
+
+        let suffix: syn::LitStr = meta.value()?.parse()?;
+        self.suffix = Some(suffix.value());
+        Ok(())
+    }
+
     pub fn get_delimiter(&self) -> &str {
         self.delimiter.as_deref().unwrap_or_default()
+    }
+
+    fn set_delimiter(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
+        if self.delimiter.is_some() {
+            return Err(
+                Error::duplicate_attribute("delimiter").to_syn_error(meta.path.span().span())
+            );
+        }
+
+        let delimiter: syn::LitStr = meta.value()?.parse()?;
+        self.delimiter = Some(delimiter.value());
+        Ok(())
+    }
+
+    fn set_rename_all(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
+        if self.rename_all.is_some() {
+            return Err(Error::duplicate_attribute("rename_all").to_syn_error(meta.path.span()));
+        }
+
+        let case: Case = meta.value()?.parse()?;
+        self.rename_all = Some(case);
+        Ok(())
     }
 
     pub fn parse_attrs(attrs: &Vec<syn::Attribute>) -> syn::Result<Self> {
@@ -316,51 +379,22 @@ impl ContainerAttributes {
             }
 
             attr.parse_nested_meta(|meta| {
-                if meta.path.is_ident("prefix") {
-                    if ca.prefix.is_some() {
-                        return Err(meta.error("container attribute `prefix` already set"));
+                let ident = meta.path.get_ident();
+                let ident = quote! { #ident }.to_string();
+
+                match ident.as_ref() {
+                    "prefix" => ca.set_prefix(meta),
+                    "suffix" => ca.set_suffix(meta),
+                    "delimiter" => ca.set_delimiter(meta),
+                    "rename_all" => ca.set_rename_all(meta),
+                    _ => {
+                        let closest_match = find_closest_match(&ident, Self::VARIANTS);
+                        Err(Error::unexpected_attribute(ident, closest_match)
+                            .to_syn_error(meta.path.span()))
                     }
+                }?;
 
-                    let str: syn::LitStr = meta.value()?.parse()?;
-                    ca.prefix = Some(str.value());
-                    return Ok(());
-                }
-
-                if meta.path.is_ident("suffix") {
-                    if ca.suffix.is_some() {
-                        return Err(meta.error("container attribute `suffix` already set"));
-                    }
-
-                    let str: syn::LitStr = meta.value()?.parse()?;
-                    ca.suffix = Some(str.value());
-                    return Ok(());
-                }
-
-                if meta.path.is_ident("delimiter") {
-                    if ca.delimiter.is_some() {
-                        return Err(meta.error("container attribute `delimiter` already set"));
-                    }
-
-                    let str: syn::LitStr = meta.value()?.parse()?;
-                    ca.delimiter = Some(str.value());
-                    return Ok(());
-                }
-
-                if meta.path.is_ident("rename_all") {
-                    if ca.rename_all.is_some() {
-                        return Err(meta.error("container attribute `rename_all` already set"));
-                    }
-
-                    let case: Case = meta.value()?.parse()?;
-                    ca.rename_all = Some(case);
-                    return Ok(());
-                }
-
-                let ident = match meta.path.get_ident() {
-                    Some(ident) => ident.to_string(),
-                    None => "unknown".to_string(),
-                };
-                Err(meta.error(format!("unknown container attribute `{ident}`")))
+                Ok(())
             })?;
         }
 
@@ -379,7 +413,7 @@ pub enum DefaultValue {
     },
 }
 
-impl Parse for DefaultValue {
+impl syn::parse::Parse for DefaultValue {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let expr: syn::Expr = input.parse()?;
         match expr {
@@ -392,12 +426,12 @@ impl Parse for DefaultValue {
                         args: call.args.into_iter().collect(),
                     })
                 } else {
-                    Err(syn::Error::new_spanned(call, "Expected a function path"))
+                    Err(syn::Error::new_spanned(call, "expected a function"))
                 }
             }
             _ => Err(syn::Error::new_spanned(
                 expr,
-                "Unexpected default value format",
+                "unexpected default value format",
             )),
         }
     }
@@ -414,41 +448,59 @@ pub struct ValidateFn {
 }
 
 impl ValidateFn {
-    fn from_nested_meta(meta: &ParseNestedMeta) -> syn::Result<Self> {
-        let mut vfn = Self {
-            before: None,
-            after: None,
-        };
+    const VARIANTS: &[&str] = &["before", "after"];
+
+    fn set_before(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
+        if self.before.is_some() {
+            return Err(
+                Error::duplicate_attribute("validate_fn::before").to_syn_error(meta.path.span())
+            );
+        }
+
+        let validate_fn = meta.value()?.parse()?;
+        self.before = Some(validate_fn);
+        Ok(())
+    }
+
+    fn set_after(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
+        if self.after.is_some() {
+            return Err(
+                Error::duplicate_attribute("validate_fn::after").to_syn_error(meta.path.span())
+            );
+        }
+
+        let validate_fn = meta.value()?.parse()?;
+        self.after = Some(validate_fn);
+        Ok(())
+    }
+
+    fn from_nested_meta(meta: syn::meta::ParseNestedMeta) -> syn::Result<Self> {
+        let mut vfn = Self::default();
 
         meta.parse_nested_meta(|meta| {
-            if meta.path.is_ident("before") {
-                let validate_fn = meta.value()?.parse()?;
-                vfn.before = Some(validate_fn);
-                return Ok(());
-            }
+            let ident = meta.path.get_ident();
+            let ident = quote! { #ident }.to_string();
 
-            if meta.path.is_ident("after") {
-                let validate_fn = meta.value()?.parse()?;
-                vfn.after = Some(validate_fn);
-                return Ok(());
-            }
+            match ident.as_ref() {
+                "before" => vfn.set_before(meta),
+                "after" => vfn.set_after(meta),
+                _ => {
+                    let closest_match = find_closest_match(&ident, Self::VARIANTS);
+                    Err(Error::unexpected_attribute(ident, closest_match)
+                        .to_syn_error(meta.path.span()))
+                }
+            }?;
 
-            let ident = match meta.path.get_ident() {
-                Some(ident) => ident.to_string(),
-                None => "unknown".to_string(),
-            };
-            Err(meta.error(format!("unknown validate_fn attribute `{ident}`")))
+            Ok(())
         })?;
 
         Ok(vfn)
     }
 
-    fn from_direct_assignment(meta: &ParseNestedMeta) -> syn::Result<Self> {
-        let validate_fn = meta.value()?.parse()?;
-        Ok(Self {
-            before: None,
-            after: Some(validate_fn),
-        })
+    fn from_direct_assignment(meta: syn::meta::ParseNestedMeta) -> syn::Result<Self> {
+        let mut vfn = Self::default();
+        vfn.set_after(meta)?;
+        Ok(vfn)
     }
 }
 
@@ -693,12 +745,159 @@ pub struct FieldAttributes {
     /// </br>
     ///
     /// **Default**: false
-    pub nested: bool,
+    pub is_nested: bool,
 }
 
 impl FieldAttributes {
-    fn add_env(&mut self, env: String) {
-        self.envs.get_or_insert_with(Vec::new).push(env);
+    const VARIANTS: &[&str] = &[
+        "env",
+        "default",
+        "parse_fn",
+        "arg_type",
+        "validate_fn",
+        "delimiter",
+        "no_prefix",
+        "no_suffix",
+        "nested",
+    ];
+
+    fn add_env(&mut self, field: &syn::Field, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
+        // Allows the user to specify both
+        // 1. `#[fill(env)]` - Uses the field name as environment variable
+        // 2. `#[fill(env = "env")]` - Uses `env` as the environment variable
+        let env = match meta.input.peek(syn::Token![=]) {
+            true => {
+                let str: syn::LitStr = meta.value()?.parse()?;
+                let env = str.value();
+                if env.is_empty() {
+                    return Err(Error::invalid_attribute("env", "attribute cannot be empty")
+                        .to_syn_error(meta.path.span()));
+                }
+
+                if self.envs.as_ref().is_some_and(|e| e.contains(&env)) {
+                    return Err(Error::duplicate_attribute(format!("env::{env}"))
+                        .to_syn_error(meta.path.span()));
+                }
+
+                env
+            }
+            false => {
+                let ident = &field.ident;
+                let env = quote! { #ident }.to_string();
+
+                if self.envs.as_ref().is_some_and(|e| e.contains(&env)) {
+                    return Err(Error::duplicate_attribute(format!("env::{env}"))
+                        .to_syn_error(meta.path.span()));
+                }
+
+                env
+            }
+        };
+
+        self.envs.get_or_insert(Vec::new()).push(env);
+        Ok(())
+    }
+
+    fn set_default(
+        &mut self,
+        field: &syn::Field,
+        meta: syn::meta::ParseNestedMeta,
+    ) -> syn::Result<()> {
+        if self.default.is_some() {
+            return Err(Error::duplicate_attribute("default").to_syn_error(meta.path.span()));
+        }
+
+        self.default = match meta.input.peek(syn::Token![=]) {
+            true => Some(meta.value()?.parse()?),
+            false => {
+                let ty = &field.ty;
+                Some(DefaultValue::Type(ty.clone()))
+            }
+        };
+
+        Ok(())
+    }
+
+    fn set_parse_fn(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
+        if self.parse_fn.is_some() {
+            return Err(Error::duplicate_attribute("parse_fn").to_syn_error(meta.path.span()));
+        }
+
+        self.parse_fn = Some(meta.value()?.parse()?);
+        Ok(())
+    }
+
+    fn set_arg_type(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
+        if self.arg_type.is_some() {
+            return Err(Error::duplicate_attribute("arg_type").to_syn_error(meta.path.span()));
+        }
+
+        self.arg_type = Some(meta.value()?.parse()?);
+        Ok(())
+    }
+
+    fn set_validate_fn(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
+        if self.validate_fn.before.is_some() || self.validate_fn.after.is_some() {
+            return Err(Error::duplicate_attribute("validate_fn").to_syn_error(meta.path.span()));
+        }
+
+        self.validate_fn = match meta.input.peek(syn::Token![=]) {
+            true => ValidateFn::from_direct_assignment(meta),
+            false => ValidateFn::from_nested_meta(meta),
+        }?;
+        Ok(())
+    }
+
+    fn set_delimiter(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
+        if self.delimiter.is_some() {
+            return Err(Error::duplicate_attribute("delimiter").to_syn_error(meta.path.span()));
+        }
+
+        let str: syn::LitStr = meta.value()?.parse()?;
+        let delimiter = str.value();
+        if delimiter == "=" {
+            return Err(
+                Error::invalid_attribute("delimiter", "delimiter reserved by the macro")
+                    .to_syn_error(meta.path.span()),
+            );
+        }
+
+        if delimiter.is_empty() {
+            return Err(
+                Error::invalid_attribute("delimiter", "attribute cannot be empty")
+                    .to_syn_error(meta.path.span()),
+            );
+        }
+
+        self.delimiter = Some(delimiter);
+        Ok(())
+    }
+
+    fn disable_prefix(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
+        if self.no_prefix {
+            return Err(Error::duplicate_attribute("no_prefix").to_syn_error(meta.path.span()));
+        }
+
+        self.no_prefix = true;
+        Ok(())
+    }
+
+    fn disable_suffix(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
+        if self.no_suffix {
+            return Err(Error::duplicate_attribute("no_suffix").to_syn_error(meta.path.span()));
+        }
+
+        self.no_suffix = true;
+        Ok(())
+    }
+
+    fn is_nested(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
+        if self.is_nested {
+            return Err(Error::duplicate_attribute("nested").to_syn_error(meta.path.span()));
+        }
+
+        self.is_nested = true;
+        Ok(())
     }
 
     pub fn parse_attrs(field: &syn::Field, attrs: &Vec<syn::Attribute>) -> syn::Result<Self> {
@@ -709,120 +908,43 @@ impl FieldAttributes {
             }
 
             attr.parse_nested_meta(|meta| {
-                if meta.path.is_ident("env") {
-                    // Allows the user to specify both
-                    // 1. `#[fill(env)]` - Uses the field name as environment variable
-                    // 2. `#[fill(env = "env")]` - Uses `env` as the environment variable
-                    match meta.input.peek(syn::Token![=]) {
-                        true => {
-                            let str: syn::LitStr = meta.value()?.parse()?;
-                            let env = str.value();
-                            if env.is_empty() {
-                                return Err(meta.error("field attribute `env` cannot be empty"));
-                            }
+                let ident = meta.path.get_ident();
+                let ident = quote! { #ident }.to_string();
 
-                            fa.add_env(env);
-                        }
-                        false => {
-                            let ident = &field.ident;
-                            let name = quote! { #ident }.to_string();
-                            fa.add_env(name.to_owned())
-                        }
+                match ident.as_ref() {
+                    "env" => fa.add_env(field, meta),
+                    "default" => fa.set_default(field, meta),
+                    "parse_fn" => fa.set_parse_fn(meta),
+                    "arg_type" => fa.set_arg_type(meta),
+                    "validate_fn" => fa.set_validate_fn(meta),
+                    "delimiter" => fa.set_delimiter(meta),
+                    "no_prefix" => fa.disable_prefix(meta),
+                    "no_suffix" => fa.disable_suffix(meta),
+                    "nested" => fa.is_nested(meta),
+                    _ => {
+                        let closest_match = find_closest_match(&ident, Self::VARIANTS);
+                        Err(Error::unexpected_attribute(ident, closest_match)
+                            .to_syn_error(meta.path.span()))
                     }
+                }?;
 
-                    return Ok(());
-                }
-
-                // Allows the user to specify both
-                // 1. `#[fill(default)]` - Uses the field types default value
-                // 2. `#[fill(default = default_t)]` - Uses `default_t` as the field value
-                // 3. `#[fill(default = default_fn)]` - Uses `default_fn` return value as the
-                //    field value
-                if meta.path.is_ident("default") {
-                    fa.default = match meta.input.peek(syn::Token![=]) {
-                        true => Some(meta.value()?.parse()?),
-                        false => {
-                            let ty = &field.ty;
-                            Some(DefaultValue::Type(ty.clone()))
-                        }
-                    };
-
-                    return Ok(());
-                }
-
-                if meta.path.is_ident("parse_fn") {
-                    let parse_fn = meta.value()?.parse()?;
-                    fa.parse_fn = Some(parse_fn);
-                    return Ok(());
-                }
-
-                if meta.path.is_ident("arg_type") {
-                    let arg_type = meta.value()?.parse()?;
-                    fa.arg_type = Some(arg_type);
-                    return Ok(());
-                }
-
-                if meta.path.is_ident("validate_fn") {
-                    // Check if we can parse validate_fn as a nested meta aka.
-                    // #[fill(validate_fn(before = ..., after = ...))]
-                    if let Ok(vfn) = ValidateFn::from_nested_meta(&meta) {
-                        fa.validate_fn = vfn;
-                        return Ok(());
-                    }
-
-                    // If first parse fail, try to parse as if its a direct assignment aka.
-                    // #[fill(validate_fn = ...)]
-                    match ValidateFn::from_direct_assignment(&meta) {
-                        Ok(vfn) => {
-                            fa.validate_fn = vfn;
-                            return Ok(());
-                        }
-                        Err(_) => {
-                            return Err(
-                                meta.error("expected either direct assignment or parentheses")
-                            )
-                        }
-                    }
-                }
-
-                if meta.path.is_ident("delimiter") {
-                    let str: syn::LitStr = meta.value()?.parse()?;
-                    let delimiter = str.value();
-                    if delimiter == "=" {
-                        return Err(
-                            meta.error("delimiter `=` is reserved by the macro and cannot be used")
-                        );
-                    }
-
-                    if delimiter.is_empty() {
-                        return Err(meta.error("field attribute `delimiter` cannot be empty"));
-                    }
-
-                    fa.delimiter = Some(delimiter);
-                    return Ok(());
-                }
-
-                if meta.path.is_ident("no_prefix") {
-                    fa.no_prefix = true;
-                    return Ok(());
-                }
-
-                if meta.path.is_ident("no_suffix") {
-                    fa.no_suffix = true;
-                    return Ok(());
-                }
-
-                if meta.path.is_ident("nested") {
-                    fa.nested = true;
-                    return Ok(());
-                }
-
-                let ident = match meta.path.get_ident() {
-                    Some(ident) => ident.to_string(),
-                    None => "unknown".to_string(),
-                };
-                Err(meta.error(format!("unknown field attribute `{ident}`")))
+                Ok(())
             })?;
+        }
+
+        // Ensure arg_type is set if parse_fn is used
+        match (fa.parse_fn.is_some(), fa.arg_type.is_some()) {
+            (true, false) => {
+                return Err(
+                    Error::missing_attribute("arg_type", "required if `parse_fn` is set")
+                        .to_syn_error(field.span()),
+                )
+            }
+            _ => (),
+        };
+
+        if fa.envs.is_none() && fa.default.is_none() && !fa.is_nested {
+            return Err(Error::IncompleteField.to_syn_error(field.span()));
         }
 
         Ok(fa)

@@ -27,5 +27,5 @@ There might not be an example for every use case. As more features are added and
 </br>
 
 <sub>
-To have actual environment variables to test with the crate <a href="https://crates.io/crates/temp-env">tmp-env</a> is used. In an actual scenario this is not neccessary as the environment variables will be found on your processe's environment
+To have actual environment variables to test with the crate <a href="https://crates.io/crates/temp-env">tmp-env</a> is used. In an actual scenario this is not necessary as the environment variables will be found on your processe's environment
 </sub>

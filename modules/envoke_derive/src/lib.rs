@@ -23,10 +23,11 @@ use attr::{ContainerAttributes, FieldAttributes};
 use proc_macro::TokenStream;
 use proc_macro2::Ident;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput, Type};
+use syn::{parse_macro_input, spanned::Spanned, DeriveInput, Type};
 use utils::{default_call, env_call, get_fields};
 
 mod attr;
+mod errors;
 mod utils;
 
 #[derive(Debug)]
@@ -60,33 +61,36 @@ pub fn derive(input: TokenStream) -> TokenStream {
 
     let attrs = match ContainerAttributes::parse_attrs(&input.attrs) {
         Ok(attrs) => attrs,
-        Err(e) => panic!("error: failed to parse container attributes for `{struct_name}`: {e}"),
+        Err(e) => return e.to_compile_error().into(),
+    };
+
+    let fields = match get_fields(&input.span(), input.data) {
+        Ok(fields) => fields,
+        Err(e) => return e.to_compile_error().into(),
     };
 
     let mut field_assignments = Vec::new();
 
-    let fields = get_fields(input.data);
     for field in fields.named {
         let field = match Field::try_from(field) {
             Ok(field) => field,
-            Err(e) => panic!("error: {e}"),
+            Err(e) => return e.to_compile_error().into(),
         };
 
         let ident = &field.ident;
         let ty = &field.ty;
 
-        let value_call = if field.attrs.nested {
+        let value_call = if field.attrs.is_nested {
             quote! {
                 <#ty as envoke::Envoke>::try_envoke()?
             }
-        } else if field.attrs.envs.is_some() {
-            env_call(&attrs, &field)
-        } else if field.attrs.default.is_some() {
-            default_call(&field)
+        } else if let Some(envs) = &field.attrs.envs {
+            env_call(&envs, &attrs, &field)
+        } else if let Some(default) = &field.attrs.default {
+            default_call(&default, &field)
         } else {
-            quote! {
-                panic!(format!("atleast one of field attributes `nested`, `env`, or `default` is required to be set for `{}`", #ident))
-            }
+            // Caught by another check
+            unreachable!()
         };
 
         let call = quote! {
