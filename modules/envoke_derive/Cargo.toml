@@ -19,6 +19,8 @@ quote = "1.0.38"
 strum = { version = "0.27.0", features = ["derive"] }
 syn = { version = "2.0.98", features = ["full", "extra-traits"] }
 proc-macro2 = "1.0.93"
+strsim = "0.11.1"
+thiserror = "2.0.11"
 
 [lib]
 proc-macro = true

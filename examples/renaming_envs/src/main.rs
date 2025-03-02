@@ -8,7 +8,7 @@
 use envoke::{Envoke, Fill};
 
 // A delimiter isn't strictly needed but it will ensure the prefix and suffix is
-// seperated from the original name
+// separated from the original name
 #[derive(Debug, Fill)]
 #[fill(
     rename_all = "SCREAMING_SNAKE_CASE",
