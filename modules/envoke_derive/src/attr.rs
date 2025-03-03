@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use convert_case::Case as ConvertCase;
+use convert_case::{pattern, Boundary, Case as ConvertCase};
 use quote::quote;
 use strum::VariantNames;
 use syn::spanned::Spanned;
@@ -210,11 +210,19 @@ impl syn::parse::Parse for Case {
     }
 }
 
-impl From<&Case> for ConvertCase {
+impl From<&Case> for ConvertCase<'_> {
     fn from(value: &Case) -> Self {
         match value {
-            Case::Lower => ConvertCase::Lower,
-            Case::Upper => ConvertCase::Upper,
+            Case::Lower => ConvertCase::Custom {
+                boundaries: &[Boundary::SPACE],
+                pattern: pattern::lowercase,
+                delim: "",
+            },
+            Case::Upper => ConvertCase::Custom {
+                boundaries: &[Boundary::SPACE],
+                pattern: pattern::uppercase,
+                delim: "",
+            },
             Case::Pascal => ConvertCase::Pascal,
             Case::Camel => ConvertCase::Camel,
             Case::Snake => ConvertCase::Snake,
