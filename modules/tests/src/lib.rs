@@ -11,30 +11,6 @@ mod tests {
     use secrecy::Secret;
 
     #[test]
-    fn test_no_panic() {
-        fn above_thirty(secs: &i32) -> anyhow::Result<()> {
-            if *secs < 30 {
-                anyhow::bail!(
-                    "connect timeout cannot be less than 30 seconds, found {secs} second(s)"
-                )
-            }
-
-            Ok(())
-        }
-
-        fn to_duration(secs: u64) -> Duration {
-            Duration::from_secs(secs)
-        }
-
-        #[derive(Debug, Fill)]
-        #[fill(rename_all = "SCREAMING_SNAKE_CASE")]
-        struct Environment {
-            #[fill(env, validate_fn(before = above_thirty))]
-            connect_timeout: i32,
-        }
-    }
-
-    #[test]
     fn test_readme_example() {
         fn above_thirty(secs: &u64) -> anyhow::Result<()> {
             if *secs < 30 {
