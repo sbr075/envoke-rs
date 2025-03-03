@@ -46,9 +46,10 @@ Examples of these features can be found in the [docs](https://docs.rs/envoke)
 
 ## Usage
 Add to your `Cargo.toml`
+
 ```toml
 [dependencies]
-envoke = "0.1.6"
+envoke = "0.1.7"
 ```
 
 ### Example
