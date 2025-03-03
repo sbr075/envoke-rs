@@ -45,7 +45,7 @@ dependencies = [
 
 [[package]]
 name = "envoke"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "envoke_derive",
  "strum",
@@ -55,7 +55,7 @@ dependencies = [
 
 [[package]]
 name = "envoke_derive"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "convert_case",
  "proc-macro2",
