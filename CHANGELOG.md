@@ -9,6 +9,10 @@ All notable changes to this project will be documented in this file.
 - Dont panic on macro error ([4c2e4cc](https://github.com/sbr075/envoke-rs/commit/4c2e4cc685ea3aefcc0ae76b6f1495c1f413f104))
 - Add custom case for lower-/uppercase ([6bddbce](https://github.com/sbr075/envoke-rs/commit/6bddbce9ec30b27e215ae6ad63acbcc5d7d72cce))
 
+### 🐛 Bug Fixes
+
+- Fix dependency path ([4607ce3](https://github.com/sbr075/envoke-rs/commit/4607ce37ea912807bc994d290c41b539ff0c8552))
+
 ### 🧪 Testing
 
 - Removed unnecessary test ([61d2fef](https://github.com/sbr075/envoke-rs/commit/61d2fef53036c239fe1a6f7ebfbc8045749466b6))
