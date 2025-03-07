@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 ### 🧹 Routine Tasks
 
 - Bump version to 0.2.0 ([9698ba3](https://github.com/sbr075/envoke-rs/commit/9698ba3759ac78560bbf617ddcc1cdb58e635611))
+- Bump envoke_derive to 0.2.0 ([2ae5463](https://github.com/sbr075/envoke-rs/commit/2ae5463a55825b95e64b999e6d37c21e54248d71))
 
 ## [0.1.7] - 2025-03-03
 
