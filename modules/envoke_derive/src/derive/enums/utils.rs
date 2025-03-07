@@ -60,7 +60,7 @@ pub fn generate_variant_calls(
                 return Err(Error::duplicate_attribute("default").to_syn_error(default.span));
             }
 
-            default_call = Some(quote! { #ident::try_envoke()? });
+            default_call = Some(quote! { #enum_name::#ident(#inner_ident::try_envoke()?) });
         }
     }
 

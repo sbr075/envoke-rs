@@ -79,14 +79,27 @@ pub fn derive_for(input: DeriveInput) -> syn::Result<TokenStream> {
 
     let (calls, default_call) = generate_variant_calls(enum_name, variants, c_attrs)?;
 
-    let unwrap_call = match default_call {
+    let value_call = match default_call {
         Some(default) => quote! {
+            let value = match #value_call {
+                Ok(value) => value,
+                Err(_) => return Ok(#default)
+            };
+
+            let mut found = None;
+            #(#calls);*
+
             match found {
                 Some(value) => Ok(value),
-                None => #default
+                None => Ok(#default)
             }
         },
         None => quote! {
+            let value = #value_call?;
+
+            let mut found = None;
+            #(#calls);*
+
             match found {
                 Some(value) => Ok(value),
                 None => Err(envoke::Error::EnumError(EnumError::NotFound))
@@ -99,12 +112,7 @@ pub fn derive_for(input: DeriveInput) -> syn::Result<TokenStream> {
             fn try_envoke() -> envoke::Result<#enum_name #type_generics> {
                 use envoke::{Envloader, EnumError};
 
-                let value = #value_call?;
-                let mut found = None;
-
-                #(#calls);*
-
-                #unwrap_call
+                #value_call
             }
         }
     };
