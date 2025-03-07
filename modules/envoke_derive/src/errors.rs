@@ -17,6 +17,9 @@ pub enum AttributeError {
         closest_match: Option<String>,
     },
 
+    #[error("attribute `{attr}` is already used before")]
+    AlreadyUsed { attr: String },
+
     #[error("invalid attribute `{attr}`: {reason}")]
     Invalid { attr: String, reason: String },
 
@@ -26,11 +29,14 @@ pub enum AttributeError {
 
 #[derive(Debug, Error)]
 pub enum Error {
-    #[error("Error: unsupported target, fill can only be derived for structs")]
+    #[error("Error: unsupported target, fill can only be derived for structs and enums")]
     UnsupportedTarget,
 
     #[error("Error: unsupported struct type, fill can only be derived for named structs")]
     UnsupportedStructType,
+
+    #[error("Error: unsupported enum type, fill can only be derived for unnamed enums")]
+    UnsupportedEnumType,
 
     #[error("Error: {0}")]
     Attribute(#[from] AttributeError),
@@ -53,6 +59,12 @@ impl Error {
         Error::Attribute(AttributeError::Unexpected {
             attr: attr.to_string(),
             closest_match: closest_match.map(|m| m.to_string()),
+        })
+    }
+
+    pub fn already_used(attr: impl ToString) -> Self {
+        Error::Attribute(AttributeError::AlreadyUsed {
+            attr: attr.to_string(),
         })
     }
 

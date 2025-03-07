@@ -15,6 +15,7 @@ Below is a table of the examples you can find in this folder
 | [validating_envs](./parsing_envs/)                      | How to validate the loaded values before and after parsing to ensure they are as you expect |
 | [nesting_structs](./nesting_structs/)                   | How to nest multiple structs together for easier management                                 |
 | [loading_map_and_set_envs](./loading_map_and_set_envs/) | How to load map or set environment variables, e.g., load a vector into a vec field          |
+| [condition_load](./conditional_load/)                   | How to load different structs based on a single environment variable                        |
 
 </br>
 

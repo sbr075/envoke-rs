@@ -1,240 +1,38 @@
-use std::str::FromStr;
+use syn::{spanned::Spanned, DeriveInput};
 
-use convert_case::{pattern, Boundary, Case as ConvertCase};
+use convert_case::{Case as ConvertCase, Casing};
 use quote::quote;
-use strum::VariantNames;
-use syn::spanned::Spanned;
 
-use crate::errors::Error;
-
-#[derive(Debug, strum::EnumString, strum::VariantNames)]
-pub enum Case {
-    /// Converts all characters to lowercase and removes binding characters.
-    ///
-    /// Used if [ContainerAttributes::rename_all] is set to `lowercase` or
-    /// `lower`
-    ///
-    /// ### Example
-    ///
-    /// Renames `EXAMPLE_ENV` to `exampleenv`
-    ///
-    /// ```
-    /// #[derive(Fill)]
-    /// #[fill(rename_all = "lowercase")]
-    /// struct Example {
-    ///     #[fill(env = "EXAMPLE_ENV")]
-    ///     field: String,
-    /// }
-    ///
-    /// let _ = Example::try_invoke()?;
-    /// ```
-    #[strum(serialize = "lowercase", serialize = "lower")]
-    Lower,
-
-    /// Converts all characters to uppercase and removes binding characters.
-    ///
-    /// Used if [ContainerAttributes::rename_all] is set to `UPPERCASE` or
-    /// `UPPER`
-    ///
-    /// ### Example
-    ///
-    /// Renames `example_env` to `EXAMPLEENV`
-    ///
-    /// ```
-    /// #[derive(Fill)]
-    /// #[fill(rename_all = "UPPERCASE")]
-    /// struct Example {
-    ///     #[fill(env = "example_env")]
-    ///     field: String,
-    /// }
-    ///
-    /// let _ = Example::try_invoke()?;
-    /// ```
-    #[strum(serialize = "UPPERCASE", serialize = "UPPER")]
-    Upper,
-
-    /// Capitalizes the first letter of each word and removes binding
-    /// characters.
-    ///
-    /// Used if [ContainerAttributes::rename_all] is set to `PascalCase`
-    ///
-    /// ### Example
-    ///
-    /// Renames `some_field_name` to `SomeFieldName`
-    ///
-    /// ```
-    /// #[derive(Fill)]
-    /// #[fill(rename_all = "PascalCase")]
-    /// struct Example {
-    ///     #[fill(env = "some_field_name")]
-    ///     field: String,
-    /// }
-    ///
-    /// let _ = Example::try_invoke()?;
-    /// ```
-    #[strum(serialize = "PascalCase")]
-    Pascal,
-
-    /// Lowercases the first letter but capitalizes the first letter of
-    /// subsequent words while removing binding characters.
-    ///
-    /// Used if [ContainerAttributes::rename_all] is set to `camelCase`
-    ///
-    /// ### Example
-    ///
-    /// Renames `some_field_name` to `someFieldName`
-    ///
-    /// ```
-    /// #[derive(Fill)]
-    /// #[fill(rename_all = "camelCase")]
-    /// struct Example {
-    ///     #[fill(env = "some_field_name")]
-    ///     field: String,
-    /// }
-    ///
-    /// let _ = Example::try_invoke()?;
-    /// ```
-    #[strum(serialize = "camelCase")]
-    Camel,
-
-    /// Converts names to lowercase and uses underscores `_` to separate words.
-    ///
-    /// Used if [ContainerAttributes::rename_all] is set to `snake_case`
-    ///
-    /// ### Example
-    ///
-    /// Renames `someFieldName` to `some_field_name`
-    ///
-    /// ```
-    /// #[derive(Fill)]
-    /// #[fill(rename_all = "snake_case")]
-    /// struct Example {
-    ///     #[fill(env = "someFieldName")]
-    ///     field: String,
-    /// }
-    ///
-    /// let _ = Example::try_invoke()?;
-    /// ```
-    #[strum(serialize = "snake_case")]
-    Snake,
-
-    /// Converts names to uppercase and uses underscores `_` to separate words.
-    ///
-    /// Used if [ContainerAttributes::rename_all] is set to
-    /// `SCREAMING_SNAKE_CASE`
-    ///
-    /// ### Example
-    ///
-    /// Renames `some_field_name` to `SOME_FIELD_NAME`
-    ///
-    /// ```
-    /// #[derive(Fill)]
-    /// #[fill(rename_all = "SCREAMING_SNAKE_CASE")]
-    /// struct Example {
-    ///     #[fill(env = "some_field_name")]
-    ///     field: String,
-    /// }
-    ///
-    /// let _ = Example::try_invoke()?;
-    /// ```
-    #[strum(serialize = "SCREAMING_SNAKE_CASE")]
-    ScreamingSnake,
-
-    /// Converts names to lowercase and uses hyphens `-` to separate words.
-    ///
-    /// Used if [ContainerAttributes::rename_all] is set to `kebab-case`
-    ///
-    /// ### Example
-    ///
-    /// Renames `some_field_name` to `some-field-name`
-    ///
-    /// ```
-    /// #[derive(Fill)]
-    /// #[fill(rename_all = "kebab-case")]
-    /// struct Example {
-    ///     #[fill(env = "some_field_name")]
-    ///     field: String,
-    /// }
-    ///
-    /// let _ = Example::try_invoke()?;
-    /// ```
-    #[strum(serialize = "kebab-case")]
-    Kebab,
-
-    /// Converts names to uppercase and uses hyphens `-` to separate words.
-    ///
-    /// Used if [ContainerAttributes::rename_all] is set to
-    /// `SCREAMING-KEBAB-CASE`
-    ///
-    /// ### Example
-    ///
-    /// Renames `some_field_name` to `SOME-FIELD-NAME`
-    ///
-    /// ```
-    /// #[derive(Fill)]
-    /// #[fill(rename_all = "SCREAMING-KEBAB-CASE")]
-    /// struct Example {
-    ///     #[fill(env = "some_field_name")]
-    ///     field: String,
-    /// }
-    ///
-    /// let _ = Example::try_invoke()?;
-    /// ```
-    #[strum(serialize = "SCREAMING-KEBAB-CASE")]
-    ScreamingKebab,
-}
-
-fn find_closest_match(input: &str, variants: &'static [&'static str]) -> Option<&'static str> {
-    for variant in variants {
-        let distance = strsim::levenshtein(input, &variant);
-        if distance <= 5 {
-            return Some(variant);
-        }
-    }
-
-    None
-}
-
-impl syn::parse::Parse for Case {
-    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let input: syn::LitStr = input.parse()?;
-        let value = input.value();
-        Case::from_str(&value).map_err(|_| {
-            let mut message = format!("unexpected naming convention `{value}`");
-            if let Some(closest_match) = find_closest_match(&value, Case::VARIANTS) {
-                message = format!("{message}, did you mean `{closest_match}`?")
-            }
-
-            syn::Error::new_spanned(input, message)
-        })
-    }
-}
-
-impl From<&Case> for ConvertCase<'_> {
-    fn from(value: &Case) -> Self {
-        match value {
-            Case::Lower => ConvertCase::Custom {
-                boundaries: &[Boundary::SPACE],
-                pattern: pattern::lowercase,
-                delim: "",
-            },
-            Case::Upper => ConvertCase::Custom {
-                boundaries: &[Boundary::SPACE],
-                pattern: pattern::uppercase,
-                delim: "",
-            },
-            Case::Pascal => ConvertCase::Pascal,
-            Case::Camel => ConvertCase::Camel,
-            Case::Snake => ConvertCase::Snake,
-            Case::ScreamingSnake => ConvertCase::UpperSnake,
-            Case::Kebab => ConvertCase::Kebab,
-            Case::ScreamingKebab => ConvertCase::UpperKebab,
-        }
-    }
-}
+use crate::{derive::common::Case, errors::Error, utils::find_closest_match};
 
 #[derive(Debug, Default)]
 pub struct ContainerAttributes {
+    /// Converts environment variable names to the specified case format.
+    ///
+    /// See [Case] for a full list of supported cases
+    ///
+    /// ### Example
+    ///
+    /// The example below will load the environment variable
+    /// `PREFIX_FIELD_SUFFIX`
+    ///
+    /// ```
+    /// #[derive(Fill)]
+    /// #[fill(prefix = "prefix", suffix = "prefix", delimiter = "_", rename_all = "UPPERCASE")]
+    /// struct Example {
+    ///     #[fill(env)]
+    ///     field: String,
+    ///     ...
+    /// }
+    ///
+    /// let _ = Example::try_invoke()?;
+    /// ```
+    ///
+    /// </br>
+    ///
+    /// **Default:** `None`
+    pub rename_all: Option<Case>,
+
     /// Prefix to prepend to all environment variable names.
     ///
     /// ### Example
@@ -293,39 +91,19 @@ pub struct ContainerAttributes {
     ///
     /// **Default:** `"_"`
     pub delimiter: Option<String>,
-
-    /// Converts environment variable names to the specified case format.
-    ///
-    /// See [Case] for a full list of supported cases
-    ///
-    /// ### Example
-    ///
-    /// The example below will load the environment variable
-    /// `PREFIX_FIELD_SUFFIX`
-    ///
-    /// ```
-    /// #[derive(Fill)]
-    /// #[fill(prefix = "prefix", suffix = "prefix", delimiter = "_", rename_all = "UPPERCASE")]
-    /// struct Example {
-    ///     #[fill(env)]
-    ///     field: String,
-    ///     ...
-    /// }
-    ///
-    /// let _ = Example::try_invoke()?;
-    /// ```
-    ///
-    /// </br>
-    ///
-    /// **Default:** `None`
-    pub rename_all: Option<Case>,
 }
 
 impl ContainerAttributes {
-    const VARIANTS: &[&str] = &["prefix", "suffix", "delimiter", "rename_all"];
+    const VARIANTS: &[&str] = &["rename_all", "prefix", "suffix", "delimiter"];
 
-    pub fn get_prefix(&self) -> &str {
-        self.prefix.as_deref().unwrap_or_default()
+    fn set_rename_all(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
+        if self.rename_all.is_some() {
+            return Err(Error::duplicate_attribute("rename_all").to_syn_error(meta.path.span()));
+        }
+
+        let case: Case = meta.value()?.parse()?;
+        self.rename_all = Some(case);
+        Ok(())
     }
 
     fn set_prefix(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
@@ -338,10 +116,6 @@ impl ContainerAttributes {
         Ok(())
     }
 
-    pub fn get_suffix(&self) -> &str {
-        self.suffix.as_deref().unwrap_or_default()
-    }
-
     fn set_suffix(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
         if self.suffix.is_some() {
             return Err(Error::duplicate_attribute("suffix").to_syn_error(meta.path.span().span()));
@@ -350,10 +124,6 @@ impl ContainerAttributes {
         let suffix: syn::LitStr = meta.value()?.parse()?;
         self.suffix = Some(suffix.value());
         Ok(())
-    }
-
-    pub fn get_delimiter(&self) -> &str {
-        self.delimiter.as_deref().unwrap_or_default()
     }
 
     fn set_delimiter(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
@@ -368,20 +138,50 @@ impl ContainerAttributes {
         Ok(())
     }
 
-    fn set_rename_all(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
-        if self.rename_all.is_some() {
-            return Err(Error::duplicate_attribute("rename_all").to_syn_error(meta.path.span()));
-        }
-
-        let case: Case = meta.value()?.parse()?;
-        self.rename_all = Some(case);
-        Ok(())
+    fn get_prefix(&self) -> &str {
+        self.prefix.as_deref().unwrap_or_default()
     }
 
-    pub fn parse_attrs(attrs: &Vec<syn::Attribute>) -> syn::Result<Self> {
+    fn get_suffix(&self) -> &str {
+        self.suffix.as_deref().unwrap_or_default()
+    }
+
+    fn get_delimiter(&self) -> &str {
+        self.delimiter.as_deref().unwrap_or_default()
+    }
+
+    pub fn rename(&self, original: String, no_prefix: bool, no_suffix: bool) -> String {
+        let delim = self.get_delimiter();
+        let prefix = if !no_prefix {
+            format!("{}{delim}", self.get_prefix())
+        } else {
+            String::new()
+        };
+
+        let suffix = if !no_suffix {
+            format!("{delim}{}", self.get_suffix())
+        } else {
+            String::new()
+        };
+
+        let renamed = format!("{prefix}{original}{suffix}");
+
+        if let Some(case) = &self.rename_all {
+            let convert_case = ConvertCase::from(case);
+            renamed.to_case(convert_case)
+        } else {
+            renamed
+        }
+    }
+}
+
+impl TryFrom<&DeriveInput> for ContainerAttributes {
+    type Error = syn::Error;
+
+    fn try_from(input: &DeriveInput) -> Result<Self, Self::Error> {
         let mut ca = ContainerAttributes::default();
 
-        for attr in attrs {
+        for attr in &input.attrs {
             if !attr.path().is_ident("fill") {
                 continue;
             }
@@ -391,10 +191,10 @@ impl ContainerAttributes {
                 let ident = quote! { #ident }.to_string();
 
                 match ident.as_ref() {
+                    "rename_all" => ca.set_rename_all(meta),
                     "prefix" => ca.set_prefix(meta),
                     "suffix" => ca.set_suffix(meta),
                     "delimiter" => ca.set_delimiter(meta),
-                    "rename_all" => ca.set_rename_all(meta),
                     _ => {
                         let closest_match = find_closest_match(&ident, Self::VARIANTS);
                         Err(Error::unexpected_attribute(ident, closest_match)
@@ -907,10 +707,14 @@ impl FieldAttributes {
         self.is_nested = true;
         Ok(())
     }
+}
 
-    pub fn parse_attrs(field: &syn::Field, attrs: &Vec<syn::Attribute>) -> syn::Result<Self> {
+impl TryFrom<&syn::Field> for FieldAttributes {
+    type Error = syn::Error;
+
+    fn try_from(field: &syn::Field) -> Result<Self, Self::Error> {
         let mut fa = FieldAttributes::default();
-        for attr in attrs {
+        for attr in &field.attrs {
             if !attr.path().is_ident("fill") {
                 continue;
             }
