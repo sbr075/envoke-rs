@@ -11,6 +11,240 @@ mod tests {
     use secrecy::Secret;
 
     #[test]
+    fn test_load_enum_use_name_as_env() {
+        #[derive(Debug, Fill)]
+        #[fill(rename_all = "SCREAMING_SNAKE_CASE")]
+        struct Production {
+            #[fill(env)]
+            api_port: u16,
+        }
+
+        #[derive(Debug, Fill)]
+        #[fill(rename_all = "SCREAMING_SNAKE_CASE")]
+        struct Development {
+            #[fill(env)]
+            api_port: u16,
+        }
+
+        #[derive(Debug, Fill)]
+        #[fill(rename_all = "UPPERCASE")]
+        enum Mode {
+            Production(Production),
+            Development(Development),
+        }
+
+        #[derive(Debug, Fill)]
+        pub struct Environment {
+            #[fill(nested)]
+            mode: Mode,
+        }
+
+        temp_env::with_vars(
+            [("MODE", Some("PRODUCTION")), ("API_PORT", Some("8000"))],
+            || {
+                Mode::envoke();
+                Environment::envoke();
+            },
+        )
+    }
+
+    #[test]
+    fn test_load_enum_overwrite_enum_name() {
+        #[derive(Debug, Fill)]
+        #[fill(rename_all = "SCREAMING_SNAKE_CASE")]
+        struct Production {
+            #[fill(env)]
+            api_port: u16,
+        }
+
+        #[derive(Debug, Fill)]
+        #[fill(rename_all = "UPPERCASE", env = "ENV")]
+        enum Mode {
+            Production(Production),
+        }
+
+        temp_env::with_vars(
+            [("ENV", Some("PRODUCTION")), ("API_PORT", Some("8000"))],
+            || {
+                Mode::envoke();
+            },
+        )
+    }
+
+    #[test]
+    fn test_load_enum_with_multiple_envs() {
+        #[derive(Debug, Fill)]
+        #[fill(rename_all = "SCREAMING_SNAKE_CASE")]
+        struct Production {
+            #[fill(env)]
+            api_port: u16,
+        }
+
+        #[derive(Debug, Fill)]
+        #[fill(rename_all = "UPPERCASE", env, env = "ENV1")]
+        enum Mode {
+            Production(Production),
+        }
+
+        temp_env::with_vars(
+            [("ENV1", Some("PRODUCTION")), ("API_PORT", Some("8000"))],
+            || {
+                Mode::envoke();
+            },
+        )
+    }
+
+    #[test]
+    fn test_load_enum_with_rename_variant() {
+        #[derive(Debug, Fill)]
+        #[fill(rename_all = "SCREAMING_SNAKE_CASE")]
+        struct Production {
+            #[fill(env = "port")]
+            api_port: u16,
+        }
+
+        #[derive(Debug, Fill)]
+        #[fill(rename_all = "UPPERCASE", env)]
+        enum Mode {
+            #[fill(rename = "PROD")]
+            Production(Production),
+        }
+
+        temp_env::with_vars(
+            [
+                ("MODE", Some("WRONG")),
+                ("MODE", Some("PROD")),
+                ("PORT", Some("8000")),
+            ],
+            || {
+                Mode::envoke();
+            },
+        )
+    }
+
+    #[test]
+    fn test_load_enum_with_aliases() {
+        #[derive(Debug, Fill)]
+        #[fill(rename_all = "SCREAMING_SNAKE_CASE")]
+        struct Production {
+            #[fill(env)]
+            api_port: u16,
+        }
+
+        #[derive(Debug, Fill)]
+        #[fill(rename_all = "UPPERCASE", env = "ENV1")]
+        enum Mode {
+            #[fill(alias = "PROD")]
+            Production(Production),
+        }
+
+        temp_env::with_vars([("ENV1", Some("PROD")), ("API_PORT", Some("8000"))], || {
+            let mode = Mode::envoke();
+            let Mode::Production(mode) = mode;
+            assert_eq!(mode.api_port, 8000)
+        })
+    }
+
+    #[test]
+    fn test_load_enum_dont_load_default_if_some_found() {
+        #[derive(Debug, Fill)]
+        #[fill(rename_all = "SCREAMING_SNAKE_CASE")]
+        struct Production {
+            #[fill(env)]
+            api_port: u16,
+        }
+
+        #[derive(Debug, Fill)]
+        #[fill(rename_all = "SCREAMING_SNAKE_CASE")]
+        struct Development {
+            #[fill(env)]
+            api_port: u16,
+        }
+
+        #[derive(Debug, Fill, strum::EnumIs)]
+        #[fill(rename_all = "UPPERCASE")]
+        enum Mode {
+            Production(Production),
+            #[fill(default)]
+            Development(Development),
+        }
+
+        temp_env::with_vars(
+            [("MODE", Some("PRODUCTION")), ("API_PORT", Some("8000"))],
+            || {
+                let mode = Mode::envoke();
+                assert!(mode.is_production())
+            },
+        )
+    }
+
+    #[test]
+    fn test_load_enum_load_default_if_none_found() {
+        #[derive(Debug, Fill)]
+        #[fill(rename_all = "SCREAMING_SNAKE_CASE")]
+        struct Production {
+            #[fill(env)]
+            api_port: u16,
+        }
+
+        #[derive(Debug, Fill)]
+        #[fill(rename_all = "SCREAMING_SNAKE_CASE")]
+        struct Development {
+            #[fill(env)]
+            api_port: u16,
+        }
+
+        #[derive(Debug, Fill, strum::EnumIs)]
+        #[fill(rename_all = "UPPERCASE")]
+        enum Mode {
+            Production(Production),
+            #[fill(default)]
+            Development(Development),
+        }
+
+        temp_env::with_vars(
+            [("ENVIRONMENT", Some("WRONG")), ("API_PORT", Some("8000"))],
+            || {
+                let mode = Mode::envoke();
+                assert!(mode.is_development())
+            },
+        )
+    }
+
+    #[test]
+    fn test_load_enum_load_default_if_found_but_no_match() {
+        #[derive(Debug, Fill)]
+        #[fill(rename_all = "SCREAMING_SNAKE_CASE")]
+        struct Production {
+            #[fill(env)]
+            api_port: u16,
+        }
+
+        #[derive(Debug, Fill)]
+        #[fill(rename_all = "SCREAMING_SNAKE_CASE")]
+        struct Development {
+            #[fill(env)]
+            api_port: u16,
+        }
+
+        #[derive(Debug, Fill, strum::EnumIs)]
+        #[fill(rename_all = "UPPERCASE", env = "ENVIRONMENT")]
+        enum Mode {
+            Production(Production),
+            #[fill(default)]
+            Development(Development),
+        }
+
+        temp_env::with_vars(
+            [("ENVIRONMENT", Some("WRONG")), ("API_PORT", Some("8000"))],
+            || {
+                let mode = Mode::envoke();
+                assert!(mode.is_development())
+            },
+        )
+    }
+
+    #[test]
     fn test_readme_example() {
         fn above_thirty(secs: &u64) -> anyhow::Result<()> {
             if *secs < 30 {
