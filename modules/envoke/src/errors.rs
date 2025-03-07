@@ -62,6 +62,6 @@ pub enum Error {
         err: BoxError,
     },
 
-    #[error("Enum error occured: {0}")]
+    #[error("Enum error occurred: {0}")]
     EnumError(#[from] EnumError),
 }

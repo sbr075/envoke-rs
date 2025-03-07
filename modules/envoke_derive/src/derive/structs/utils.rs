@@ -85,7 +85,7 @@ fn process_call(field: &Field) -> proc_macro2::TokenStream {
     call
 }
 
-pub fn generte_env_call(
+pub fn generate_env_call(
     envs: &Vec<String>,
     c_attrs: &ContainerAttributes,
     field: &Field,

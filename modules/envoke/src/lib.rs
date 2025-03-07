@@ -14,8 +14,6 @@
 //! processed. Both types of attributes allow for customizing how data is
 //! loaded, transformed, or handled.
 //!
-//! </br>
-//!
 //! ### Naming cases
 //!
 //! | Case                 | Value                  | Description                                                                                                        |
@@ -28,6 +26,8 @@
 //! | Screaming snake case | `SCREAMING_SNAKE_CASE` | Converts names to uppercase and uses underscores `_` to separate words                                             |
 //! | Kebab case           | `kebab-case`           | Converts names to lowercase and uses hyphens `-` to separate words                                                 |
 //! | Screaming kebab case | `SCREAMING-KEBAB-CASE` | Converts names to uppercase and uses hyphens `-` to separate words                                                 |
+//!
+//! </br>
 //!
 //! ### Structs
 //!
@@ -79,7 +79,7 @@
 //! | `delimiter`  | None           | Set a customer delimiter used for separated prefix, environment variable, and suffix. **NB!** If you are using the `rename_all` attribute as well it will take priority over the delimiter. It can still be useful to include the delimiter to ensure the prefix, environment variable, and suffix are separated before renaming occurs otherwise they will be interpreted as a single word!                                               |
 //! | `rename_all` | None           | Rename all environment variables to a different naming case. See [name cases](#name-cases) for a full list and description of the different options.                                                                                                                                                                                                                                                                                       |
 //!
-//! </br
+//! </br>
 //!
 //! **Variant**
 //!
