@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+### 🚀 Features
+
+- Add enum support for conditional loading ([1c63a44](https://github.com/sbr075/envoke-rs/commit/1c63a4430e45fd05c919e8d4bb1732e55a7068bc))
+
+### 🐛 Bug Fixes
+
+- Try default on any err for enum ([ca3252c](https://github.com/sbr075/envoke-rs/commit/ca3252c96ad4bc7f7da9146221fa23e038e8f2ec))
+
+### 🎨 Styling
+
+- Fix typos ([f5750a2](https://github.com/sbr075/envoke-rs/commit/f5750a2aae35379cc5eb4cfb20474d0f7515e42a))
+
+### 🧪 Testing
+
+- Add enum tests ([11a93ea](https://github.com/sbr075/envoke-rs/commit/11a93ea8177f09c3d0f29627eb05c30f4b9021b2))
+
+### 🧹 Routine Tasks
+
+- Bump version to 0.2.0 ([9698ba3](https://github.com/sbr075/envoke-rs/commit/9698ba3759ac78560bbf617ddcc1cdb58e635611))
+
 ## [0.1.7] - 2025-03-03
 
 ### 🚀 Features
