@@ -38,6 +38,12 @@ pub enum RetrieveError {
     Fatal,
 }
 
+#[derive(Debug, Error)]
+pub enum EnumError {
+    #[error("enum not found")]
+    NotFound,
+}
+
 #[derive(Debug, Error, strum::EnumIs)]
 pub enum Error {
     #[error("Retrieve error occurred: {0}")]
@@ -55,4 +61,7 @@ pub enum Error {
         #[source]
         err: BoxError,
     },
+
+    #[error("Enum error occured: {0}")]
+    EnumError(#[from] EnumError),
 }

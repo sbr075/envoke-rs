@@ -303,7 +303,7 @@ mod load_opt;
 mod utils;
 
 #[doc(hidden)]
-pub use errors::{Error, ParseError, Result, RetrieveError};
+pub use errors::{EnumError, Error, ParseError, Result, RetrieveError};
 
 #[doc(hidden)]
 pub use load::{Envloader, FromMap, FromSet};
