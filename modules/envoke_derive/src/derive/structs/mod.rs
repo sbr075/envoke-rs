@@ -2,7 +2,7 @@ use attrs::{ContainerAttributes, FieldAttributes};
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::{spanned::Spanned, Data, DeriveInput, Fields, FieldsNamed, Ident, Type};
-use utils::{generate_default_call, generte_env_call};
+use utils::{generate_default_call, generate_env_call};
 
 use crate::errors::Error;
 
@@ -59,7 +59,7 @@ pub fn derive_for(input: DeriveInput) -> syn::Result<TokenStream> {
                 <#ty as envoke::Envoke>::try_envoke()?
             }
         } else if let Some(envs) = &field.attrs.envs {
-            generte_env_call(&envs, &c_attrs, &field)
+            generate_env_call(&envs, &c_attrs, &field)
         } else if let Some(default) = &field.attrs.default {
             generate_default_call(&default, &field)
         } else {

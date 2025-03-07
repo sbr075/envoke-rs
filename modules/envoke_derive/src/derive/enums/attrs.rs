@@ -19,7 +19,7 @@ pub struct ContainerAttributes {
     // Suffix to put after all names
     pub suffix: Option<String>,
 
-    // Delimiter used to seperate prefix, name, and suffix
+    // Delimiter used to separate prefix, name, and suffix
     pub delimiter: Option<String>,
 }
 
