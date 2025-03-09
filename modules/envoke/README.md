@@ -51,7 +51,7 @@ Add to your `Cargo.toml`
 
 ```toml
 [dependencies]
-envoke = "0.2.0"
+envoke = "0.2.1"
 ```
 
 ### Example
