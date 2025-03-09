@@ -35,8 +35,11 @@ pub enum Error {
     #[error("Error: unsupported struct type, fill can only be derived for named structs")]
     UnsupportedStructType,
 
-    #[error("Error: unsupported enum type, fill can only be derived for unnamed enums")]
+    #[error("Error: unsupported enum type, fill can only be derived for unnamed-/unit enums")]
     UnsupportedEnumType,
+
+    #[error("Error: unsupported variant type, fill can only be derived for path variants")]
+    UnsupportedVariantType,
 
     #[error("Error: {0}")]
     Attribute(#[from] AttributeError),

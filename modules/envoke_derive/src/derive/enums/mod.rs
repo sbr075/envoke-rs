@@ -27,9 +27,10 @@ impl TryFrom<syn::Variant> for Variant {
                 let field = fields.unnamed.get(0).unwrap();
                 match &field.ty {
                     Type::Path(type_path) => type_path.path.get_ident().cloned(),
-                    _ => return Err(Error::UnsupportedEnumType.to_syn_error(variant.span())),
+                    _ => return Err(Error::UnsupportedVariantType.to_syn_error(variant.span())),
                 }
             }
+            syn::Fields::Unit => None,
             _ => return Err(Error::UnsupportedEnumType.to_syn_error(variant.span())),
         };
 
@@ -53,7 +54,7 @@ impl Variant {
                 let ident = &self.ident;
                 let value = quote! { #ident }.to_string();
 
-                names.push(Name { value, span: None });
+                names.insert(0, Name { value, span: None });
             }
         }
 

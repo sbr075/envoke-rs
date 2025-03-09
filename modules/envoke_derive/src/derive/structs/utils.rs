@@ -1,3 +1,4 @@
+use proc_macro2::TokenStream;
 use quote::quote;
 
 use crate::utils::is_optional;
@@ -7,7 +8,7 @@ use super::{
     Field,
 };
 
-pub fn generate_default_call(default: &DefaultValue, field: &Field) -> proc_macro2::TokenStream {
+fn generate_default_call(default: &DefaultValue, field: &Field) -> proc_macro2::TokenStream {
     let ident = &field.ident;
     let ident = quote! { #ident }.to_string();
 
@@ -85,7 +86,7 @@ fn process_call(field: &Field) -> proc_macro2::TokenStream {
     call
 }
 
-pub fn generate_env_call(
+fn generate_env_call(
     envs: &Vec<String>,
     c_attrs: &ContainerAttributes,
     field: &Field,
@@ -135,4 +136,37 @@ pub fn generate_env_call(
             }
         },
     }
+}
+
+pub fn generate_field_calls(
+    c_attrs: ContainerAttributes,
+    fields: Vec<Field>,
+) -> syn::Result<Vec<TokenStream>> {
+    let mut calls = Vec::new();
+
+    for field in fields {
+        let ident = &field.ident;
+        let ty = &field.ty;
+
+        let value_call = if field.attrs.is_nested {
+            quote! {
+                <#ty as envoke::Envoke>::try_envoke()?
+            }
+        } else if let Some(envs) = &field.attrs.envs {
+            generate_env_call(&envs, &c_attrs, &field)
+        } else if let Some(default) = &field.attrs.default {
+            generate_default_call(&default, &field)
+        } else {
+            // Caught by another check
+            unreachable!()
+        };
+
+        let call = quote! {
+            #ident: #value_call
+        };
+
+        calls.push(call);
+    }
+
+    Ok(calls)
 }

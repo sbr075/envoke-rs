@@ -47,10 +47,17 @@ pub fn generate_variant_calls(
         }
 
         // Generate match call
-        let call = quote! {
-            if [#(#renamed),*].iter().any(|n| value.eq(n)) {
-                found = Some(#enum_name::#ident(#inner_ident::try_envoke()?))
-            }
+        let call = match inner_ident {
+            Some(inner) => quote! {
+                if [#(#renamed),*].iter().any(|n| value.eq(n)) {
+                    found = Some(#enum_name::#ident(#inner::try_envoke()?))
+                }
+            },
+            None => quote! {
+                if [#(#renamed),*].iter().any(|n| value.eq(n)) {
+                    found = Some(#enum_name::#ident)
+                }
+            },
         };
         calls.push(call);
 
@@ -60,7 +67,10 @@ pub fn generate_variant_calls(
                 return Err(Error::duplicate_attribute("default").to_syn_error(default.span));
             }
 
-            default_call = Some(quote! { #enum_name::#ident(#inner_ident::try_envoke()?) });
+            default_call = Some(match inner_ident {
+                Some(inner) => quote! { #enum_name::#ident(#inner::try_envoke()?) },
+                None => quote! { #enum_name::#ident },
+            });
         }
     }
 
