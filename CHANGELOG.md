@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+### 🚀 Features
+
+- Add support for unit enums ([5262fb5](https://github.com/sbr075/envoke-rs/commit/5262fb5a1ac48afe5383d7aaf012a431b2e2ca59))
+
+### 🧹 Routine Tasks
+
+- Bump version to 0.2.1 ([894fff7](https://github.com/sbr075/envoke-rs/commit/894fff7d6af94ca56a46a82c471f0072e377daa7))
+
 ## [0.2.0] - 2025-03-07
 
 ### 🚀 Features
