@@ -7,4 +7,5 @@ edition.workspace = true
 
 [dependencies]
 envoke = { path = "../../modules/envoke" }
+strum = { version = "0.27.1", features = ["derive"] }
 temp-env = "0.3.6"

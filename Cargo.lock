@@ -39,6 +39,7 @@ name = "conditional_load"
 version = "0.1.0"
 dependencies = [
  "envoke",
+ "strum",
  "temp-env",
 ]
 
