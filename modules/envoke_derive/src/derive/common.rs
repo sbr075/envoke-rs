@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use convert_case::{pattern, Boundary, Case as ConvertCase};
+use convert_case::{Case as ConvertCase, Casing};
 use strum::VariantNames;
 
 use crate::utils::find_closest_match;
@@ -197,25 +197,17 @@ impl syn::parse::Parse for Case {
     }
 }
 
-impl From<&Case> for ConvertCase<'_> {
-    fn from(value: &Case) -> Self {
-        match value {
-            Case::Lower => ConvertCase::Custom {
-                boundaries: &[Boundary::SPACE],
-                pattern: pattern::lowercase,
-                delim: "",
-            },
-            Case::Upper => ConvertCase::Custom {
-                boundaries: &[Boundary::SPACE],
-                pattern: pattern::uppercase,
-                delim: "",
-            },
-            Case::Pascal => ConvertCase::Pascal,
-            Case::Camel => ConvertCase::Camel,
-            Case::Snake => ConvertCase::Snake,
-            Case::ScreamingSnake => ConvertCase::UpperSnake,
-            Case::Kebab => ConvertCase::Kebab,
-            Case::ScreamingKebab => ConvertCase::UpperKebab,
+impl Case {
+    pub fn rename(&self, s: &str) -> String {
+        match self {
+            Case::Lower => s.to_lowercase(),
+            Case::Upper => s.to_uppercase(),
+            Case::Pascal => s.to_case(ConvertCase::Pascal),
+            Case::Camel => s.to_case(ConvertCase::Camel),
+            Case::Snake => s.to_case(ConvertCase::Snake),
+            Case::ScreamingSnake => s.to_case(ConvertCase::UpperSnake),
+            Case::Kebab => s.to_case(ConvertCase::Kebab),
+            Case::ScreamingKebab => s.to_case(ConvertCase::UpperKebab),
         }
     }
 }

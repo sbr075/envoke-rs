@@ -1,4 +1,3 @@
-use convert_case::{Case as ConvertCase, Casing};
 use proc_macro2::Span;
 use quote::quote;
 use syn::{meta::ParseNestedMeta, spanned::Spanned, DeriveInput};
@@ -134,8 +133,7 @@ impl ContainerAttributes {
         let renamed = format!("{prefix}{original}{suffix}");
 
         if let Some(case) = &self.rename_all {
-            let convert_case = ConvertCase::from(case);
-            renamed.to_case(convert_case)
+            case.rename(&renamed)
         } else {
             renamed
         }
