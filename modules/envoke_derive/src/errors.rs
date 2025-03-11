@@ -46,7 +46,7 @@ pub enum Error {
 
     #[error(
         "Error: field is missing key attribute(s): atleast one of the field attributes `env`, \
-         `default`, or `nested` is required"
+         `default`, `ignore`, or `nested` is required"
     )]
     IncompleteField,
 }

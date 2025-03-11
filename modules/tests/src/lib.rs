@@ -11,6 +11,17 @@ mod tests {
     use secrecy::Secret;
 
     #[test]
+    fn test_ignore_field() {
+        #[derive(Fill)]
+        struct Test {
+            #[fill(ignore)]
+            field2: Option<i32>,
+        }
+
+        Test::envoke();
+    }
+
+    #[test]
     fn test_load_enum_use_name_as_env() {
         #[derive(Debug, Fill)]
         #[fill(rename_all = "SCREAMING_SNAKE_CASE")]

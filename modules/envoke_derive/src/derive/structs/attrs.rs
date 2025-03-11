@@ -320,44 +320,6 @@ pub struct FieldAttributes {
     /// The first found value is parsed and set as the field value. If parsing
     /// fails, the operation stops, and no further variables are checked.
     ///
-    /// ### Usage
-    ///
-    /// **1.** `env`
-    ///
-    /// The example below will load the value from environment variable `field`
-    /// ```
-    /// #[derive(Fill)]
-    /// struct Example {
-    ///     #[fill(env)]
-    ///     field: i32,
-    ///     ...
-    /// }
-    ///
-    /// let _ = Example::try_invoke()?;
-    /// ```
-    ///
-    /// </br>
-    ///
-    /// **2.** `env = "<key>"`
-    ///
-    /// The example below will load the value from environment variable `ENV`
-    /// ```
-    /// #[derive(Fill)]
-    /// struct Example {
-    ///     #[fill(env = "ENV")]
-    ///     field: i32,
-    ///     ...
-    /// }
-    ///
-    /// let _ = Example::try_invoke()?;
-    /// ```
-    ///
-    /// `env` and `env = "<key>"` can be used together, as well as can be added
-    /// on as many times as needed. Note that they will be loaded in the order
-    /// they are defined
-    ///
-    /// </br>
-    ///
     /// **Default:** `None`.
     pub envs: Option<Vec<String>>,
 
@@ -366,64 +328,6 @@ pub struct FieldAttributes {
     /// This function can be used without specifying `envs` to provide a static
     /// fallback.
     ///
-    /// ### Usage
-    ///
-    /// **1.** `default`
-    ///
-    /// The example below will `field` with `i32::default()` which is `0`
-    /// ```
-    /// #[derive(Fill)]
-    /// struct Example {
-    ///     #[fill(default)]
-    ///     field: i32,
-    ///     ...
-    /// }
-    ///
-    /// let _ = Example::try_invoke()?;
-    /// ```
-    ///
-    /// </br>
-    ///
-    /// **2.** `default = <value>`
-    ///
-    /// The example below will `field` with `10`
-    /// ```
-    /// #[derive(Fill)]
-    /// struct Example {
-    ///     #[fill(default = 10)]
-    ///     field: i32,
-    ///     ...
-    /// }
-    ///
-    /// let _ = Example::try_invoke()?;
-    /// ```
-    ///
-    /// </br>
-    ///
-    /// **3.** `default = <func>()`
-    ///
-    /// The example below will `field` with `10` (if result remains unchanged)
-    /// ```
-    /// fn field_default() -> i32 {
-    ///     let result = 10;
-    ///     ... // extra steps if need
-    ///     result
-    /// }
-    ///
-    /// #[derive(Fill)]
-    /// struct Example {
-    ///     #[fill(default = field_default())]
-    ///     field: i32
-    ///     ...
-    /// }
-    ///
-    /// let _ = Example::try_invoke()?;
-    /// ```
-    ///
-    /// Additionally arguments can be parsed to field_default() if needed
-    ///
-    /// </br>
-    ///
     /// **Default:** `None`
     pub default: Option<DefaultValue>,
 
@@ -431,29 +335,6 @@ pub struct FieldAttributes {
     /// Requires `arg_type` to be set if used.
     ///
     /// Allows for custom types which normally isn't supported by envoke-rs
-    ///
-    /// ### Example
-    ///
-    /// The example below takes the value from environment variable `field` and
-    /// runs it through the `to_duration` function before assigning it to the
-    /// field value
-    ///
-    /// ```
-    /// fn to_duration(secs: u64) -> std::time::Duration {
-    ///     std::time::Duration::from_secs(secs)
-    /// }
-    ///
-    /// #[derive(Fill)]
-    /// struct Example {
-    ///     #[fill(env, parse_fn = to_duration, arg_type = u64)]
-    ///     field: std::time::Duration,
-    ///     ...
-    /// }
-    ///
-    /// let _ = Example::try_invoke()?;
-    /// ```
-    ///
-    /// </br>
     ///
     /// **Default:** `None`
     pub parse_fn: Option<syn::Path>,
@@ -468,47 +349,10 @@ pub struct FieldAttributes {
     /// A function to call after the value is loaded and parsed for extra
     /// validations, e.g., ensuring i64 is above 0
     ///
-    /// ### Example
-    ///
-    /// The example below takes and i64 and checks that it is above 0
-    ///
-    /// ```
-    /// fn above_zero(secs: u64) -> std::result::Result<()> {
-    ///     match secs > 0 {
-    ///         true => Ok(),
-    ///         false => Err("duration cannot be less than 0")
-    ///     }
-    /// }
-    ///
-    /// #[derive(Fill)]
-    /// struct Example {
-    ///     #[fill(env, parse_fn = to_duration, arg_type = u64, validate_fn = above_zero)]
-    ///     field: std::time::Duration,
-    ///     ...
-    /// }
-    /// ```
-    ///
     /// **Default:** `None`
     pub validate_fn: ValidateFn,
 
     /// Delimiter used when parsing list-type fields (e.g., `Vec<String>`).
-    ///
-    /// ### Example
-    ///
-    /// The example below will parse, e.g., `value1;value2;value3` to
-    /// Vec<String>. Note that the delimiter `=` is reserved as its the
-    /// delimiter for key and values in a map string
-    ///
-    /// ```
-    /// #[derive(Fill)]
-    /// struct Example {
-    ///     #[fill(env, delimiter = ";")]
-    ///     field: Vec<String>,
-    ///     ...
-    /// }
-    /// ```
-    ///
-    /// </br>
     ///
     /// **Default:** `","`
     pub delimiter: Option<String>,
@@ -530,30 +374,11 @@ pub struct FieldAttributes {
     /// Indicates the the field is a nested struct in which the parser needs to
     /// call try_envoke on
     ///
-    /// ### Example
-    ///
-    /// ```rust
-    /// #[derive(Fill)]
-    /// struct Inner {
-    ///     #[fill(env)]
-    ///     field: String,
-    ///     ...
-    /// }
-    ///
-    /// #[derive(Fill)]
-    /// struct Outer {
-    ///     #[fill(nested)]
-    ///     inner: Inner,
-    ///     ...
-    /// }
-    /// ```
-    ///
-    /// The structs can nested multiple times
-    ///
-    /// </br>
-    ///
     /// **Default**: false
     pub is_nested: bool,
+
+    /// Indicates that the field should not be done anything with
+    pub is_ignore: bool,
 }
 
 impl FieldAttributes {
@@ -567,6 +392,7 @@ impl FieldAttributes {
         "no_prefix",
         "no_suffix",
         "nested",
+        "ignore",
     ];
 
     fn add_env(&mut self, field: &syn::Field, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
@@ -699,12 +525,21 @@ impl FieldAttributes {
         Ok(())
     }
 
-    fn is_nested(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
+    fn set_nested(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
         if self.is_nested {
             return Err(Error::duplicate_attribute("nested").to_syn_error(meta.path.span()));
         }
 
         self.is_nested = true;
+        Ok(())
+    }
+
+    fn set_ignore(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
+        if self.is_nested {
+            return Err(Error::duplicate_attribute("ignore").to_syn_error(meta.path.span()));
+        }
+
+        self.is_ignore = true;
         Ok(())
     }
 }
@@ -732,7 +567,8 @@ impl TryFrom<&syn::Field> for FieldAttributes {
                     "delimiter" => fa.set_delimiter(meta),
                     "no_prefix" => fa.disable_prefix(meta),
                     "no_suffix" => fa.disable_suffix(meta),
-                    "nested" => fa.is_nested(meta),
+                    "nested" => fa.set_nested(meta),
+                    "ignore" => fa.set_ignore(meta),
                     _ => {
                         let closest_match = find_closest_match(&ident, Self::VARIANTS);
                         Err(Error::unexpected_attribute(ident, closest_match)
@@ -755,7 +591,7 @@ impl TryFrom<&syn::Field> for FieldAttributes {
             _ => (),
         };
 
-        if fa.envs.is_none() && fa.default.is_none() && !fa.is_nested {
+        if fa.envs.is_none() && fa.default.is_none() && !fa.is_nested && !fa.is_ignore {
             return Err(Error::IncompleteField.to_syn_error(field.span()));
         }
 

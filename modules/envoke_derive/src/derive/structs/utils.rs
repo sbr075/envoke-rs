@@ -1,7 +1,8 @@
 use proc_macro2::TokenStream;
 use quote::quote;
+use syn::spanned::Spanned;
 
-use crate::utils::is_optional;
+use crate::{errors::Error, utils::is_optional};
 
 use super::{
     attrs::{ContainerAttributes, DefaultValue},
@@ -151,6 +152,18 @@ pub fn generate_field_calls(
         let value_call = if field.attrs.is_nested {
             quote! {
                 <#ty as envoke::Envoke>::try_envoke()?
+            }
+        } else if field.attrs.is_ignore {
+            if !is_optional(ty) {
+                return Err(Error::invalid_attribute(
+                    "ignore",
+                    "ignore can only be used on optional fields",
+                )
+                .to_syn_error(ident.span()));
+            }
+
+            quote! {
+                None
             }
         } else if let Some(envs) = &field.attrs.envs {
             generate_env_call(&envs, &c_attrs, &field)
