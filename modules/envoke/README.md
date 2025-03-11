@@ -10,41 +10,25 @@ Designed to be flexible and reduce boilerplate, all to make it easier to manage 
 - [Examples](https://github.com/sbr075/envoke-rs/blob/main/examples/)
 - [CHANGELOG](https://github.com/sbr075/envoke-rs/blob/main/CHANGELOG.md)
 
-## Features
+## Key features
 
 - **Flexible Environment Variable Naming**  
-  - Customize the case of environment variable names.  
-  - Add global prefixes and suffixes (with per-field opt-out support).  
+  Customize naming conventions with support for multiple environments, renaming, prefixes, and suffixes.  
 
-- **Multiple Ways to Define Environment Variables**  
-  - Use the field name directly.  
-  - Explicitly set the environment variable name to use.  
-  - Define multiple environment variables as fallbacks. The order in which they are defined matters.  
+- **Versatile Default Values**  
+  Define defaults through type-based values, direct assignments, or function return values.  
 
-- **Configurable Default Values**  
-  - Support default values as field type defaults, static values, or function return values.  
-  - Defaults can be used independently or as a fallback if no environment variable is found.  
-  - Note that defaults are not run through validation or parsing functions.  
+- **Pre-Assignment Parsing**  
+  Convert values into complex types before field assignment for enhanced data handling.  
 
-- **Custom Parsing Support**
-  - Transform environment variable values before field assignment.  
-    - Example: Convert a list of integers into a list of `Duration`.  
+- **Comprehensive Validation**  
+  Validate values before and/or after assignment to ensure data integrity.  
 
-- **Value Validation**
-  - Validate parsed values before assignment to ensure they meet expected constraints.  
-    - Example: Ensure an integer is greater than `0`.  
+- **Structured Data Support**  
+  Seamlessly work with nested structs, enums, or standalone enums.  
 
-- **Nested Struct Support**  
-  - Populate multiple nested structs in a single call.  
-
-- **Conditional Struct Loading**  
-  - Dynamically load different structs based on an environment variable.  
-  - Supports enums where each variant maps to a specific configuration struct.  
-  - Enables flexible multi-environment configurations such as **Production**, **Staging**, and **Development**.  
-
-- **Macro-Based Convenience**  
-  - Works similarly to the `Default` trait—define only the fields you need.  
-  - Unspecified fields are auto-filled, but even explicitly defined fields need to be able to be loaded correctly. 
+- **Built-in Sequence & Map Parsing**  
+  Effortlessly parse sequence and map-formatted strings for structured data.
 
 ## Usage
 Add to your `Cargo.toml`
