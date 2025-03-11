@@ -1,6 +1,6 @@
 [package]
 name = "envoke_derive"
-version = "0.2.1"
+version = "0.2.2"
 description = "A proc macro for loading environment variables into struct fields automatically."
 categories = ["development-tools::procedural-macro-helpers"]
 keywords = [

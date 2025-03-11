@@ -1,6 +1,6 @@
 [package]
 name = "envoke"
-version = "0.2.1"
+version = "0.2.2"
 description = "A simple and ergonomic way to load environment variables into struct fields."
 categories = ["config", "parsing"]
 keywords = [
@@ -14,8 +14,7 @@ license.workspace = true
 edition.workspace = true
 
 [dependencies]
-#envoke_derive = "0.2.1"
-envoke_derive = { path = "../envoke_derive" }
+envoke_derive = "0.2.2"
 strum = { version = "0.27.1", features = ["derive"] }
 thiserror = "2.0.11"
 
