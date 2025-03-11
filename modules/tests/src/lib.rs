@@ -15,12 +15,12 @@ mod tests {
         #[derive(Fill)]
         #[fill(rename_all = "UPPERCASE")]
         struct Test {
-            field1: Option<i32>,
+            field_1: Option<i32>,
         }
 
-        temp_env::with_var("FIELD1", Some("123"), || {
+        temp_env::with_var("FIELD_1", Some("123"), || {
             let t = Test::envoke();
-            assert_eq!(t.field1, Some(123))
+            assert_eq!(t.field_1, Some(123))
         })
     }
 

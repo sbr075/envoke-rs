@@ -1,6 +1,5 @@
 use syn::{spanned::Spanned, DeriveInput};
 
-use convert_case::{Case as ConvertCase, Casing};
 use quote::quote;
 
 use crate::{derive::common::Case, errors::Error, utils::find_closest_match};
@@ -167,8 +166,7 @@ impl ContainerAttributes {
         let renamed = format!("{prefix}{original}{suffix}");
 
         if let Some(case) = &self.rename_all {
-            let convert_case = ConvertCase::from(case);
-            renamed.to_case(convert_case)
+            case.rename(&renamed)
         } else {
             renamed
         }
