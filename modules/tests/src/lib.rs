@@ -11,11 +11,25 @@ mod tests {
     use secrecy::Secret;
 
     #[test]
+    fn test_no_env_given() {
+        #[derive(Fill)]
+        #[fill(rename_all = "UPPERCASE")]
+        struct Test {
+            field1: Option<i32>,
+        }
+
+        temp_env::with_var("FIELD1", Some("123"), || {
+            let t = Test::envoke();
+            assert_eq!(t.field1, Some(123))
+        })
+    }
+
+    #[test]
     fn test_ignore_field() {
         #[derive(Fill)]
         struct Test {
             #[fill(ignore)]
-            field2: Option<i32>,
+            field1: Option<i32>,
         }
 
         Test::envoke();

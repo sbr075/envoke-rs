@@ -43,12 +43,6 @@ pub enum Error {
 
     #[error("Error: {0}")]
     Attribute(#[from] AttributeError),
-
-    #[error(
-        "Error: field is missing key attribute(s): atleast one of the field attributes `env`, \
-         `default`, `ignore`, or `nested` is required"
-    )]
-    IncompleteField,
 }
 
 impl Error {

@@ -592,7 +592,10 @@ impl TryFrom<&syn::Field> for FieldAttributes {
         };
 
         if fa.envs.is_none() && fa.default.is_none() && !fa.is_nested && !fa.is_ignore {
-            return Err(Error::IncompleteField.to_syn_error(field.span()));
+            let ident = &field.ident;
+            let env = quote! { #ident }.to_string();
+
+            fa.envs.get_or_insert(Vec::new()).push(env);
         }
 
         Ok(fa)
