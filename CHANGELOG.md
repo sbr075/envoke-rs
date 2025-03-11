@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+### 🚀 Features
+
+- Add ignore field for structs ([3b334df](https://github.com/sbr075/envoke-rs/commit/3b334df2443208b3621726348ca0ae9e4809f1eb))
+- Make fill(env) implicit on fields with no attrs ([a7aae0c](https://github.com/sbr075/envoke-rs/commit/a7aae0cf9c8bf38123d11d3de99731ff689602f1))
+
+### 🐛 Bug Fixes
+
+- Lower-/uppercase now only converts characters ([57e866f](https://github.com/sbr075/envoke-rs/commit/57e866fd5db8ee438671dfe29418c49a0971e581))
+
+### 📚 Documentation
+
+- Update readmes ([a8bdb72](https://github.com/sbr075/envoke-rs/commit/a8bdb72b6f27d9493454b57d7e1e79379e1e4ad1))
+- Add missing attr to envoke docs ([4fd5565](https://github.com/sbr075/envoke-rs/commit/4fd5565b7561556afd7972a5e36b5a8fe9b92015))
+
+### 🧹 Routine Tasks
+
+- Bump version to 0.2.2 ([702ee28](https://github.com/sbr075/envoke-rs/commit/702ee2803a1d7e6ae40d9787b189160fec1b852b))
+
 ## [0.2.1] - 2025-03-09
 
 ### 🚀 Features
