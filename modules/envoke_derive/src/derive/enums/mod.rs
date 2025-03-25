@@ -69,7 +69,8 @@ pub fn derive_for(input: DeriveInput) -> syn::Result<TokenStream> {
     let c_attrs = ContainerAttributes::try_from(&input)?;
     let envs = c_attrs.get_envs();
 
-    let value_call = quote! { envoke::Envloader::<String>::load_once(&[#(#envs),*], ",") };
+    let value_call =
+        quote! { envoke::Envloader::<String>::load_once(&[#(#envs),*], ",", dotenv.as_ref()) };
 
     let enum_data = get_enum_data(input.data)?;
     let variants: Vec<Variant> = enum_data
@@ -77,6 +78,20 @@ pub fn derive_for(input: DeriveInput) -> syn::Result<TokenStream> {
         .into_iter()
         .map(Variant::try_from)
         .collect::<syn::Result<_>>()?;
+
+    // Create the dotenv call here but it will be used when generating the variant
+    // calls below
+    let dotenv_call = match &c_attrs.dotenv {
+        Some(dotenv) => {
+            quote! {
+                let dotenv = Some(load_dotenv(#dotenv)?);
+            }
+        }
+        // Not the real type but it just needs a type
+        None => quote! {
+            let dotenv: Option<std::collections::HashMap<String, String>> = None;
+        },
+    };
 
     let (calls, default_call) = generate_variant_calls(enum_name, variants, c_attrs)?;
 
@@ -103,7 +118,7 @@ pub fn derive_for(input: DeriveInput) -> syn::Result<TokenStream> {
 
             match found {
                 Some(value) => Ok(value),
-                None => Err(envoke::Error::EnumError(EnumError::NotFound))
+                None => Err(envoke::Error::EnumError(envoke::EnumError::NotFound))
             }
         },
     };
@@ -111,7 +126,9 @@ pub fn derive_for(input: DeriveInput) -> syn::Result<TokenStream> {
     let expanded = quote! {
         impl #impl_generics envoke::Envoke for #enum_name #type_generics #where_clause {
             fn try_envoke() -> envoke::Result<#enum_name #type_generics> {
-                use envoke::{Envloader, EnumError};
+                use envoke::{Envloader};
+
+                #dotenv_call
 
                 #value_call
             }

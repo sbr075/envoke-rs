@@ -62,7 +62,7 @@
 //! | `no_suffix`   | False      | Disable adding the global suffix to this environment variable. This will also remove the delimiter that wouldn't normally be between the environment variable and suffix                                                                                                                                                                                                                                                                                                                                                              |
 //! | `nested`      | False      | Indicate that the field is a struct. Required when the field type is another struct                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 //! | `ignore`      | False      | Indicate that the derive macro should ignore this field when parsing. Note that this only works on optional fields.                                                                                                                                                                                                                                                                                                                                                                                                                   |
-//! 
+//!
 //! </br>
 //!
 //! ### Enums
@@ -125,6 +125,9 @@ pub use load::{Envloader, FromMap, FromSet};
 
 #[doc(hidden)]
 pub use load_opt::{FromMapOpt, FromSetOpt, OptEnvloader};
+
+#[doc(hidden)]
+pub use utils::load_dotenv;
 
 #[doc(hidden)]
 pub use envoke_derive::Fill;

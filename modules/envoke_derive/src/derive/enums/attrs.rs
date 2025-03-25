@@ -20,10 +20,29 @@ pub struct ContainerAttributes {
 
     // Delimiter used to separate prefix, name, and suffix
     pub delimiter: Option<String>,
+
+    /// Define a dotenv file to load and add to the struct fields
+    ///
+    /// Note that if an environment variable is found in the processes
+    /// environment it will have priority over the variable in the dotenv file
+    ///
+    /// Expects a standard dotenv file with format  
+    /// KEY1=VALUE1  
+    /// KEY2=VALUE2  
+    ///
+    /// **Default**: None
+    pub dotenv: Option<String>,
 }
 
 impl ContainerAttributes {
-    const VARIANTS: &[&str] = &["env", "rename_all", "prefix", "suffix", "delimiter"];
+    const VARIANTS: &[&str] = &[
+        "env",
+        "rename_all",
+        "prefix",
+        "suffix",
+        "delimiter",
+        "dotenv",
+    ];
 
     fn add_env(&mut self, input: &DeriveInput, meta: ParseNestedMeta) -> syn::Result<()> {
         // Allows the user to specify both
@@ -74,7 +93,7 @@ impl ContainerAttributes {
 
     fn set_prefix(&mut self, meta: ParseNestedMeta) -> syn::Result<()> {
         if self.prefix.is_some() {
-            return Err(Error::duplicate_attribute("prefix").to_syn_error(meta.path.span().span()));
+            return Err(Error::duplicate_attribute("prefix").to_syn_error(meta.path.span()));
         }
 
         let prefix: syn::LitStr = meta.value()?.parse()?;
@@ -84,7 +103,7 @@ impl ContainerAttributes {
 
     fn set_suffix(&mut self, meta: ParseNestedMeta) -> syn::Result<()> {
         if self.suffix.is_some() {
-            return Err(Error::duplicate_attribute("suffix").to_syn_error(meta.path.span().span()));
+            return Err(Error::duplicate_attribute("suffix").to_syn_error(meta.path.span()));
         }
 
         let suffix: syn::LitStr = meta.value()?.parse()?;
@@ -94,13 +113,21 @@ impl ContainerAttributes {
 
     fn set_delimiter(&mut self, meta: ParseNestedMeta) -> syn::Result<()> {
         if self.delimiter.is_some() {
-            return Err(
-                Error::duplicate_attribute("delimiter").to_syn_error(meta.path.span().span())
-            );
+            return Err(Error::duplicate_attribute("delimiter").to_syn_error(meta.path.span()));
         }
 
         let delimiter: syn::LitStr = meta.value()?.parse()?;
         self.delimiter = Some(delimiter.value());
+        Ok(())
+    }
+
+    fn set_dotenv(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
+        if self.dotenv.is_some() {
+            return Err(Error::duplicate_attribute("dotenv").to_syn_error(meta.path.span()));
+        }
+
+        let dotenv: syn::LitStr = meta.value()?.parse()?;
+        self.dotenv = Some(dotenv.value());
         Ok(())
     }
 
@@ -169,6 +196,7 @@ impl TryFrom<&DeriveInput> for ContainerAttributes {
                     "prefix" => ca.set_prefix(meta),
                     "suffix" => ca.set_suffix(meta),
                     "delimiter" => ca.set_delimiter(meta),
+                    "dotenv" => ca.set_dotenv(meta),
                     _ => {
                         let closest_match = find_closest_match(&ident, Self::VARIANTS);
                         Err(Error::unexpected_attribute(ident, closest_match)

@@ -52,12 +52,28 @@ pub fn derive_for(input: DeriveInput) -> syn::Result<TokenStream> {
         .map(Field::try_from)
         .collect::<syn::Result<_>>()?;
 
+    // Create the dotenv call here but it will be used when generating the field
+    // calls below
+    let dotenv_call = match &c_attrs.dotenv {
+        Some(dotenv) => {
+            quote! {
+                let dotenv = Some(load_dotenv(#dotenv)?);
+            }
+        }
+        // Not the real type but it just needs a type
+        None => quote! {
+            let dotenv: Option<std::collections::HashMap<String, String>> = None;
+        },
+    };
+
     let field_calls = generate_field_calls(c_attrs, fields)?;
 
     let expanded = quote! {
         impl #impl_generics envoke::Envoke for #struct_name #type_generics #where_clause {
             fn try_envoke() -> envoke::Result<#struct_name #type_generics> {
-                use envoke::{Envloader, OptEnvloader, FromMap, FromMapOpt, FromSet, FromSetOpt};
+                use envoke::{Envloader, OptEnvloader, FromMap, FromMapOpt, FromSetOpt, FromSet, load_dotenv};
+
+                #dotenv_call
 
                 Ok(#struct_name {
                     #(#field_calls),*
