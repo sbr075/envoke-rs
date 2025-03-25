@@ -4,9 +4,9 @@ version = 4
 
 [[package]]
 name = "anyhow"
-version = "1.0.96"
+version = "1.0.97"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b964d184e89d9b6b67dd2715bc8e74cf3107fb2b529990c90cf517326150bf4"
+checksum = "dcfed56ad506cb2c684a14971b8861fdc3baaaae314b9e5f9bb532cbe3ba7a4f"
 
 [[package]]
 name = "applying_defaults"
@@ -54,9 +54,9 @@ dependencies = [
 
 [[package]]
 name = "envoke"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
- "envoke_derive 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "envoke_derive",
  "strum",
  "temp-env",
  "thiserror",
@@ -64,7 +64,7 @@ dependencies = [
 
 [[package]]
 name = "envoke_derive"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "convert_case",
  "proc-macro2",
@@ -76,18 +76,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "envoke_derive"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c3f564829b1c30ea80a84eb554e83658c16dc0c822ff030a571386ae83603ae"
+name = "from_dotenv"
+version = "0.1.0"
 dependencies = [
- "convert_case",
- "proc-macro2",
- "quote",
- "strsim",
- "strum",
- "syn",
- "thiserror",
+ "envoke",
+ "temp-env",
 ]
 
 [[package]]
