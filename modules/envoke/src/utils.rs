@@ -1,6 +1,31 @@
-use std::{env, str::FromStr};
+use std::{collections::HashMap, env, io::BufRead, str::FromStr};
 
 use crate::errors::{ParseError, Result, RetrieveError};
+
+pub fn load_dotenv(filepath: &str) -> Result<HashMap<String, String>> {
+    let file = std::fs::File::open(filepath).unwrap();
+    let reader = std::io::BufReader::new(file);
+
+    let envs = reader
+        .lines()
+        .flat_map(|line| line.ok())
+        .map(|line| line.trim().to_owned())
+        .filter(|line| !line.is_empty() && !line.starts_with('#'))
+        .filter_map(|line| {
+            let (key, value) = line.split_once('=')?;
+            let key = key.trim();
+            let mut value = value.trim();
+
+            // Remove optional surrounding quotes
+            if let Some(stripped) = value.strip_prefix('"').and_then(|s| s.strip_suffix('"')) {
+                value = stripped;
+            }
+
+            Some((key.to_string(), value.to_string()))
+        })
+        .collect();
+    Ok(envs)
+}
 
 pub fn load_once<T: FromStr>(envs: &[impl AsRef<str>]) -> Result<T> {
     for key in envs {
@@ -86,4 +111,14 @@ where
             })
         })
         .collect()
+}
+
+pub fn parse_str<V>(value: impl AsRef<str>) -> std::result::Result<V, ParseError>
+where
+    V: FromStr,
+{
+    let val = value.as_ref();
+    val.parse().map_err(|_| ParseError::UnexpectedValueType {
+        value: val.to_string(),
+    })
 }

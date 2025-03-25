@@ -106,10 +106,10 @@ fn generate_env_call(
     let is_optional = is_optional(ty);
     let base_call = match is_optional {
         true => {
-            quote! { envoke::OptEnvloader::<#ty>::load_once(&[#(#envs),*], #delim) }
+            quote! { envoke::OptEnvloader::<#ty>::load_once(&[#(#envs),*], #delim, dotenv.as_ref()) }
         }
         false => {
-            quote! { envoke::Envloader::<#ty>::load_once(&[#(#envs),*], #delim) }
+            quote! { envoke::Envloader::<#ty>::load_once(&[#(#envs),*], #delim, dotenv.as_ref()) }
         }
     };
 
