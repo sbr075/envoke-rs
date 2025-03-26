@@ -4,6 +4,13 @@ Envoke is a simple and ergonomic way to load environment variables into struct f
 
 Designed to be flexible and reduce boilerplate, all to make it easier to manage environment variables in your application.
 
+## Whats new?
+- This list!
+- Load environment variables from a `.env` file with the `dotenv` attribute—works on both structs and enums.  
+- The new `try_parse_fn` attribute lets you use fallible parsing functions. Just like `parse_fn`, but it accepts a `Result`.
+
+Read more [here!](https://github.com/sbr075/envoke-rs/blob/main/CHANGELOG.md)
+
 ## Useful links
 - [Documentation](https://docs.rs/envoke)
 - [Github](https://github.com/sbr075/envoke-rs)
@@ -35,7 +42,7 @@ Add to your `Cargo.toml`
 
 ```toml
 [dependencies]
-envoke = "0.2.2"
+envoke = "0.3.0"
 ```
 
 ### Example
