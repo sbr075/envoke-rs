@@ -9,17 +9,13 @@ use std::time::Duration;
 
 use envoke::{Envoke, Fill};
 
-fn to_duration(secs: u64) -> Duration {
-    Duration::from_secs(secs)
-}
-
 #[derive(Debug, Fill)]
 struct Environment {
     // Note that default values are not parsed as they are expected to already be the correct type
     #[fill(env, default = "http://localhost:8080")]
     url: String,
 
-    #[fill(env, parse_fn = to_duration, arg_type = u64)]
+    #[fill(env, parse_fn = Duration::from_secs, arg_type = u64)]
     connect_timeout: Duration,
 }
 

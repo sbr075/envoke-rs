@@ -24,6 +24,13 @@ pub enum ParseError {
 
     #[error("value `{value}` is of unexpected type")]
     UnexpectedValueType { value: String },
+
+    #[error("parsing failed for `{field}`: {err}")]
+    Failed {
+        field: String,
+        #[source]
+        err: BoxError,
+    },
 }
 
 #[derive(Debug, Error, strum::EnumIs)]
@@ -44,6 +51,16 @@ pub enum EnumError {
     NotFound,
 }
 
+#[derive(Debug, Error)]
+pub enum ValidationError {
+    #[error("validation failed for `{field}`: {err}")]
+    Failed {
+        field: String,
+        #[source]
+        err: BoxError,
+    },
+}
+
 #[derive(Debug, Error, strum::EnumIs)]
 pub enum Error {
     #[error("Retrieve error occurred: {0}")]
@@ -52,16 +69,12 @@ pub enum Error {
     #[error("Parse error occurred: {0}")]
     ParseError(#[from] ParseError),
 
-    #[error("Failed to convert field `{field}` to expected type `{ty}`")]
-    ConvertError { field: String, ty: String },
-
-    #[error("Validation error occurred for `{field}`: {err}")]
-    ValidationError {
-        field: String,
-        #[source]
-        err: BoxError,
-    },
+    #[error("Validation error occurred: {0}")]
+    ValidationError(#[from] ValidationError),
 
     #[error("Enum error occurred: {0}")]
     EnumError(#[from] EnumError),
+
+    #[error("Failed to convert field `{field}` to expected type `{ty}`")]
+    ConvertError { field: String, ty: String },
 }
