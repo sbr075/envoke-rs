@@ -126,7 +126,7 @@ pub fn derive_for(input: DeriveInput) -> syn::Result<TokenStream> {
     let expanded = quote! {
         impl #impl_generics envoke::Envoke for #enum_name #type_generics #where_clause {
             fn try_envoke() -> envoke::Result<#enum_name #type_generics> {
-                use envoke::{Envloader};
+                use envoke::{Envloader, load_dotenv};
 
                 #dotenv_call
 

@@ -10,6 +10,13 @@ use envoke::{Envoke, Fill};
 
 #[derive(Debug, Fill)]
 #[fill(dotenv = ".env", rename_all = "UPPERCASE")]
+enum Status {
+    Employed,
+    Unemployed,
+}
+
+#[derive(Debug, Fill)]
+#[fill(dotenv = ".env", rename_all = "UPPERCASE")]
 struct Environment {
     #[fill(env)]
     name: String,
@@ -24,11 +31,17 @@ struct Environment {
     // Uses the envvar found in the processes environment as it has priority
     // over what is found in the dotenv file.
     profession: String,
+
+    #[fill(nested)]
+    status: Status,
 }
 
 fn main() {
     temp_env::with_var("PROFESSION", Some("DEV"), || {
         let env = Environment::envoke();
         println!("{env:#?}");
+
+        let status = Status::envoke();
+        println!("{status:#?}");
     });
 }
