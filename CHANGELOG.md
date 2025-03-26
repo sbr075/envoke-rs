@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 - Update readmes ([a8bdb72](https://github.com/sbr075/envoke-rs/commit/a8bdb72b6f27d9493454b57d7e1e79379e1e4ad1))
 - Add missing attr to envoke docs ([4fd5565](https://github.com/sbr075/envoke-rs/commit/4fd5565b7561556afd7972a5e36b5a8fe9b92015))
 - Update attrs in doccomment ([1373178](https://github.com/sbr075/envoke-rs/commit/13731783dcf41dad6902d5cf986d31873e8acc66))
+- Update readme ([02931c9](https://github.com/sbr075/envoke-rs/commit/02931c9f3e091cc90355a2606219445da0412e2d))
 
 ### 🧹 Routine Tasks
 
