@@ -8,6 +8,9 @@ All notable changes to this project will be documented in this file.
 
 - Add ignore field for structs ([3b334df](https://github.com/sbr075/envoke-rs/commit/3b334df2443208b3621726348ca0ae9e4809f1eb))
 - Make fill(env) implicit on fields with no attrs ([a7aae0c](https://github.com/sbr075/envoke-rs/commit/a7aae0cf9c8bf38123d11d3de99731ff689602f1))
+- Add `dotenv` container attr ([434861d](https://github.com/sbr075/envoke-rs/commit/434861dfadeb0a0c27e88d1044d0bfc74e57e678))
+- Add `from_dotenv` example ([c600dd6](https://github.com/sbr075/envoke-rs/commit/c600dd612b57a14288bd2a2578ea3ded528931f8))
+- Add try_parse_fn attr ([650fdd8](https://github.com/sbr075/envoke-rs/commit/650fdd8cf674677c064219d6c01273f0d86541eb))
 
 ### 🐛 Bug Fixes
 
@@ -17,10 +20,12 @@ All notable changes to this project will be documented in this file.
 
 - Update readmes ([a8bdb72](https://github.com/sbr075/envoke-rs/commit/a8bdb72b6f27d9493454b57d7e1e79379e1e4ad1))
 - Add missing attr to envoke docs ([4fd5565](https://github.com/sbr075/envoke-rs/commit/4fd5565b7561556afd7972a5e36b5a8fe9b92015))
+- Update attrs in doccomment ([1373178](https://github.com/sbr075/envoke-rs/commit/13731783dcf41dad6902d5cf986d31873e8acc66))
 
 ### 🧹 Routine Tasks
 
 - Bump version to 0.2.2 ([702ee28](https://github.com/sbr075/envoke-rs/commit/702ee2803a1d7e6ae40d9787b189160fec1b852b))
+- Bump version to 0.3.0 ([9dcb18c](https://github.com/sbr075/envoke-rs/commit/9dcb18c49b91a3b0573459517bdcab562ac33b98))
 
 ## [0.2.1] - 2025-03-09
 
