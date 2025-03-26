@@ -358,6 +358,14 @@ pub struct FieldAttributes {
     /// **Default:** `None`
     pub parse_fn: Option<syn::Path>,
 
+    /// A function to parse the loaded value with before applying to the field.
+    /// Requires `arg_type` to be set if used.
+    ///
+    /// Allows for custom types which normally isn't supported by envoke-rs
+    ///
+    /// **Default**: `None`
+    pub try_parse_fn: Option<syn::Path>,
+
     /// Arg type in the parse_fn function. Required by `parse_fn` if used.
     ///
     /// See [FieldAttributes::parse_fn] for an example on how to use it
@@ -405,6 +413,7 @@ impl FieldAttributes {
         "env",
         "default",
         "parse_fn",
+        "try_parse_fn",
         "arg_type",
         "validate_fn",
         "delimiter",
@@ -473,10 +482,35 @@ impl FieldAttributes {
 
     fn set_parse_fn(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
         if self.parse_fn.is_some() {
+            return Err(Error::invalid_attribute(
+                "parse_fn",
+                "`parse_fn` cannot be used together with `try_parse_fn`",
+            )
+            .to_syn_error(meta.path.span()));
+        }
+
+        if self.parse_fn.is_some() {
             return Err(Error::duplicate_attribute("parse_fn").to_syn_error(meta.path.span()));
         }
 
         self.parse_fn = Some(meta.value()?.parse()?);
+        Ok(())
+    }
+
+    fn set_try_parse_fn(&mut self, meta: syn::meta::ParseNestedMeta) -> syn::Result<()> {
+        if self.parse_fn.is_some() {
+            return Err(Error::invalid_attribute(
+                "try_parse_fn",
+                "`try_parse_fn` cannot be used together with `parse_fn`",
+            )
+            .to_syn_error(meta.path.span()));
+        }
+
+        if self.try_parse_fn.is_some() {
+            return Err(Error::duplicate_attribute("try_parse_fn").to_syn_error(meta.path.span()));
+        }
+
+        self.try_parse_fn = Some(meta.value()?.parse()?);
         Ok(())
     }
 
@@ -581,6 +615,7 @@ impl TryFrom<&syn::Field> for FieldAttributes {
                     "env" => fa.add_env(field, meta),
                     "default" => fa.set_default(field, meta),
                     "parse_fn" => fa.set_parse_fn(meta),
+                    "try_parse_fn" => fa.set_try_parse_fn(meta),
                     "arg_type" => fa.set_arg_type(meta),
                     "validate_fn" => fa.set_validate_fn(meta),
                     "delimiter" => fa.set_delimiter(meta),
@@ -599,16 +634,20 @@ impl TryFrom<&syn::Field> for FieldAttributes {
             })?;
         }
 
-        // Ensure arg_type is set if parse_fn is used
-        match (fa.parse_fn.is_some(), fa.arg_type.is_some()) {
-            (true, false) => {
-                return Err(
-                    Error::missing_attribute("arg_type", "required if `parse_fn` is set")
-                        .to_syn_error(field.span()),
-                )
-            }
-            _ => (),
-        };
+        // Ensure arg_type is set if try_parse_fn/parse_fn is used
+        if fa.try_parse_fn.is_some() && fa.arg_type.is_none() {
+            return Err(
+                Error::missing_attribute("arg_type", "required if `try_parse_fn` is set")
+                    .to_syn_error(field.span()),
+            );
+        }
+
+        if fa.parse_fn.is_some() && fa.arg_type.is_none() {
+            return Err(
+                Error::missing_attribute("arg_type", "required if `parse_fn` is set")
+                    .to_syn_error(field.span()),
+            );
+        }
 
         // If no envs or defaults are given, the field is not marked as nested or to be
         // ignored we add it to the list of envs to load

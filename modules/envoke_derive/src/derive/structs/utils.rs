@@ -60,7 +60,7 @@ fn process_call(field: &Field) -> proc_macro2::TokenStream {
 
     if let Some(validate_fn) = &field.attrs.validate_fn.before {
         call = quote! {
-            #validate_fn(&value).map_err(|e| envoke::Error::ValidationError {
+            #validate_fn(&value).map_err(|e| envoke::ValidationError::Failed {
                 field: #ident.to_string(),
                 err: e.into()
             })?;
@@ -72,12 +72,20 @@ fn process_call(field: &Field) -> proc_macro2::TokenStream {
             #call
             let value = #parse_fn(value);
         }
+    } else if let Some(try_parse_fn) = &field.attrs.try_parse_fn {
+        call = quote! {
+            #call
+            let value = #try_parse_fn(value).map_err(|e| envoke::ParseError::Failed {
+                field: #ident.to_string(),
+                err: e.into()
+            })?;
+        }
     }
 
     if let Some(validate_fn) = &field.attrs.validate_fn.after {
         call = quote! {
             #call
-            #validate_fn(&value).map_err(|e| envoke::Error::ValidationError {
+            #validate_fn(&value).map_err(|e| envoke::ValidationError::Failed {
                 field: #ident.to_string(),
                 err: e.into()
             })?;
@@ -92,7 +100,10 @@ fn generate_env_call(
     c_attrs: &ContainerAttributes,
     field: &Field,
 ) -> proc_macro2::TokenStream {
-    let ty = match (&field.attrs.parse_fn.is_some(), &field.attrs.arg_type) {
+    let ty = match (
+        field.attrs.parse_fn.is_some() || field.attrs.try_parse_fn.is_some(),
+        &field.attrs.arg_type,
+    ) {
         (true, Some(ty)) => ty,
         _ => &field.ty,
     };

@@ -513,6 +513,26 @@ mod tests {
     }
 
     #[test]
+    fn test_load_env_and_try_parse() {
+        use std::time::Duration;
+
+        fn to_time(sec: u64) -> anyhow::Result<Duration> {
+            Ok(Duration::from_secs(sec))
+        }
+
+        #[derive(Fill)]
+        struct Test {
+            #[fill(env = "TEST_ENV", try_parse_fn = to_time, arg_type = u64)]
+            field: Duration,
+        }
+
+        temp_env::with_var("TEST_ENV", Some("10"), || {
+            let test = Test::envoke();
+            assert_eq!(test.field, Duration::from_secs(10));
+        });
+    }
+
+    #[test]
     fn test_load_env_and_validate_before() {
         use std::time::Duration;
 
