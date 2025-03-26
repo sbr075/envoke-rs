@@ -37,7 +37,10 @@ A derive macro for loading environment variables into struct fields
   Seamlessly work with nested structs, enums, or standalone enums.  
 
 - **Built-in Sequence & Map Parsing**  
-  Effortlessly parse sequence and map-formatted strings for structured data.
+  Effortlessly parse sequence and map-formatted strings for structured data.  
+
+- **Dotenv File Support**  
+  Automatically load environment variables from a `.env` file for improved configuration management.  
 
 </br>
 

@@ -20,10 +20,10 @@ Read more [here!](https://github.com/sbr075/envoke-rs/blob/main/CHANGELOG.md)
 ## Key features
 
 - **Flexible Environment Variable Naming**  
-  Customize naming conventions with support for multiple environments, renaming, prefixes, and suffixes.  
+  Customize naming conventions with support for multiple environments, renaming, prefixes, suffixes, etc.  
 
 - **Versatile Default Values**  
-  Define defaults through type-based values, direct assignments, or function return values.  
+  Define defaults through type's default, direct assignments, or function return values.  
 
 - **Pre-Assignment Parsing**  
   Convert values into complex types before field assignment for enhanced data handling.  
@@ -35,7 +35,10 @@ Read more [here!](https://github.com/sbr075/envoke-rs/blob/main/CHANGELOG.md)
   Seamlessly work with nested structs, enums, or standalone enums.  
 
 - **Built-in Sequence & Map Parsing**  
-  Effortlessly parse sequence and map-formatted strings for structured data.
+  Effortlessly parse sequence and map-formatted strings for structured data.  
+
+- **Dotenv File Support**  
+  Automatically load environment variables from a `.env` file for improved configuration management.  
 
 ## Usage
 Add to your `Cargo.toml`
